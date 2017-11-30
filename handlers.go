@@ -23,20 +23,27 @@ func CreateRealmHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	err = db.CreateRealm(realm.Name, realm.Title)
+	realmID, err := db.CreateRealm(realm.Name, realm.Title)
 	if err != nil {
-		http.Error(w, "Failed to create realm.\n\t"+err.Error(), 500)
+		RespondServerError(
+			w,
+			[]string{
+				"Failed to create realm.",
+				err.Error(),
+			},
+		)
 		return
 	}
 
-	fmt.Fprintf(w, "OK")
+	resp := struct{ ID int }{realmID}
+	fmt.Println(realmID)
+	SuccessWithJSON(w, resp)
 }
 
 // Player management
 
 // CreatePlayerHandler method
 func CreatePlayerHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Creating new player...")
 }
 
 // Session management
