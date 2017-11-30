@@ -69,7 +69,7 @@ func CreateRealm(name string, title null.String) (int, error) {
 	err := db.QueryRow(insertRealm, name, title).Scan(&realmID)
 
 	if err != nil {
-		fmt.Println("Failed to create new Realm")
+		fmt.Println("Failed to create new realm")
 		return 0, err
 	}
 
@@ -78,7 +78,21 @@ func CreateRealm(name string, title null.String) (int, error) {
 }
 
 // CreatePlayer method
-func CreatePlayer(name string, realmID int) error {
-	fmt.Println("Creating player in DB")
-	return nil
+func CreatePlayer(name string, realmID int) (int, error) {
+	insertPlayer := `
+		INSERT INTO player (name, realm_id)
+		VALUES ($1, $2)
+		RETURNING id
+	`
+
+	var playerID int
+	err := db.QueryRow(insertPlayer, name, realmID).Scan(&playerID)
+
+	if err != nil {
+		fmt.Println("Failed to create new player")
+		return 0, err
+	}
+
+	fmt.Printf("Successfully created new player id=%d name=\"%s\"", playerID, name)
+	return playerID, nil
 }
