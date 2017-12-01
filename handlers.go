@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/tomarrell/poker_api/db"
@@ -105,8 +104,6 @@ func CreateSessionHandler(w http.ResponseWriter, r *http.Request) {
 		FailDecode(w, err)
 	}
 
-	fmt.Println(sess)
-
 	if sess.RealmID.IsZero() {
 		InvalidArgs(w, []string{"RealmID"})
 		return
@@ -122,4 +119,13 @@ func CreateSessionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	sessionID, err := db.CreateSession(sess.RealmID, sess.Name, sess.Time, sess.PlayerIDs)
+
+	if err != nil {
+		RespondServerError(w, []string{"Failed to create new session", err.Error()})
+		return
+	}
+
+	resp := struct{ SessionID int }{sessionID}
+	SuccessWithJSON(w, resp)
 }

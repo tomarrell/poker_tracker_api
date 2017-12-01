@@ -98,3 +98,35 @@ func CreatePlayer(name null.String, realmID null.Int) (int, error) {
 	fmt.Printf("Successfully created new player id=%d name=\"%s\"\n", playerID, name.String)
 	return playerID, nil
 }
+
+// CreateSession handles creating the session row and creating player_session records
+func CreateSession(realmID null.Int, name null.String, time null.Time, playerIDs []int) (int, error) {
+	insertSession := `
+		INSERT INTO session (realm_id, name, time)
+		VALUES ($1, $2, $3)
+		RETURNING id
+	`
+
+	mapPlayerToSession := `
+		INSERT INTO player_session (player_id, session_id, buyin, walkout)
+		VALUES ($1, $2, $3, $4)
+	`
+
+	var sessionID int
+
+	tx := db.MustBegin()
+	tx.QueryRow(insertSession, realmID, name, time).Scan(&sessionID)
+	tx.MustExec(mapPlayerToSession, 26, 4, 5, 10)
+	panic("test")
+	err := tx.Commit()
+
+	fmt.Println(sessionID)
+
+	if err != nil {
+		fmt.Println("Failed to create new player")
+		return 0, err
+	}
+
+	fmt.Printf("Successfully created new session id=%d name=\"%s\" time=\"%s\"", sessionID, name.String, time.Time)
+	return sessionID, nil
+}
