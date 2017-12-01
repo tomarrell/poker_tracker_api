@@ -11,8 +11,8 @@ func SuccessWithJSON(w http.ResponseWriter, payload interface{}) {
 		w,
 		http.StatusOK,
 		map[string]interface{}{
-			"result": payload,
-			"error":  nil,
+			"data":  payload,
+			"error": nil,
 		},
 	)
 }
@@ -31,14 +31,26 @@ func RespondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Write(response)
 }
 
+// RespondBadRequest responds to the request with bad request 400
+func RespondBadRequest(w http.ResponseWriter, errorObject interface{}) {
+	RespondWithJSON(
+		w,
+		http.StatusBadRequest,
+		map[string]interface{}{
+			"data":  nil,
+			"error": errorObject,
+		},
+	)
+}
+
 // RespondServerError responds to the request with internal server error 500
 func RespondServerError(w http.ResponseWriter, errorMessages []string) {
 	RespondWithJSON(
 		w,
 		http.StatusInternalServerError,
 		map[string][]string{
-			"result": nil,
-			"error":  errorMessages,
+			"data":  nil,
+			"error": errorMessages,
 		},
 	)
 }

@@ -29,17 +29,19 @@ type Session struct {
 
 // Player DB table
 type Player struct {
-	ID      int    `db:"id"`
-	Name    string `db:"name"`
-	RealmID int    `db:"realm_id"`
+	ID        int       `db:"id"`
+	Name      string    `db:"name"`
+	RealmID   int       `db:"realm_id"`
+	CreatedAt time.Time `db:"created_at"`
 }
 
 // PlayerSession DB table
 type PlayerSession struct {
-	PlayerID  int `db:"player_id"`
-	SessionID int `db:"session_id"`
-	Buyin     int `db:"buyin"`
-	Walkout   int `db:"walkout"`
+	PlayerID  int       `db:"player_id"`
+	SessionID int       `db:"session_id"`
+	Buyin     int       `db:"buyin"`
+	Walkout   int       `db:"walkout"`
+	CreatedAt time.Time `db:"created_at"`
 }
 
 // InitDB initializes the database connection
@@ -58,7 +60,7 @@ func Close() {
 }
 
 // CreateRealm method
-func CreateRealm(name string, title null.String) (int, error) {
+func CreateRealm(name null.String, title null.String) (int, error) {
 	insertRealm := `
 		INSERT INTO realm (name, title)
 		VALUES ($1, $2)
@@ -69,16 +71,16 @@ func CreateRealm(name string, title null.String) (int, error) {
 	err := db.QueryRow(insertRealm, name, title).Scan(&realmID)
 
 	if err != nil {
-		fmt.Println("Failed to create new realm")
+		fmt.Println("Failed to create new realm:", err.Error())
 		return 0, err
 	}
 
-	fmt.Printf("Successfully created new realm id=%d name=\"%s\"", realmID, name)
+	fmt.Printf("Successfully created new realm id=%d name=\"%s\"", realmID, name.String)
 	return realmID, nil
 }
 
 // CreatePlayer method
-func CreatePlayer(name string, realmID int) (int, error) {
+func CreatePlayer(name null.String, realmID null.Int) (int, error) {
 	insertPlayer := `
 		INSERT INTO player (name, realm_id)
 		VALUES ($1, $2)
@@ -93,6 +95,6 @@ func CreatePlayer(name string, realmID int) (int, error) {
 		return 0, err
 	}
 
-	fmt.Printf("Successfully created new player id=%d name=\"%s\"", playerID, name)
+	fmt.Printf("Successfully created new player id=%d name=\"%s\"\n", playerID, name.String)
 	return playerID, nil
 }

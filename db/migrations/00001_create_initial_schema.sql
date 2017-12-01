@@ -22,6 +22,7 @@ CREATE TABLE "player" (
     "id" serial,
     "name" text NOT NULL,
     "realm_id" int NOT NULL,
+    "created_at" timestamptz NOT NULL DEFAULT now(),
     PRIMARY KEY ("id"),
     FOREIGN KEY ("realm_id") REFERENCES "realm"("id") ON DELETE CASCADE
 );
@@ -31,6 +32,7 @@ CREATE TABLE "player_session" (
     "session_id" int,
     "buyin" int NOT NULL,
     "walkout" int NOT NULL,
+    "created_at" timestamptz NOT NULL DEFAULT now(),
     PRIMARY KEY ("player_id", "session_id"),
     FOREIGN KEY ("player_id") REFERENCES "player"("id") ON DELETE CASCADE,
     FOREIGN KEY ("session_id") REFERENCES "session"("id") ON DELETE CASCADE
