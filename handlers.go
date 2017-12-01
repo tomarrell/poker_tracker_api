@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/tomarrell/poker_api/db"
+	"github.com/tomarrell/poker_tracker_api/db"
 	"gopkg.in/guregu/null.v3"
 )
 

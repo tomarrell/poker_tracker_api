@@ -1,11 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	_ "github.com/GoogleCloudPlatform/cloudsql-proxy/proxy/dialers/postgres"
 	"github.com/gorilla/mux"
-	"github.com/tomarrell/poker_api/db"
+	"github.com/tomarrell/poker_tracker_api/db"
 )
 
 func main() {
@@ -17,6 +18,7 @@ func main() {
 		sslmode=disable
 	`
 	dbType := "cloudsqlpostgres"
+	PORT := ":3000"
 
 	db.InitDB(dbType, dbInfo)
 	defer db.Close()
@@ -29,5 +31,6 @@ func main() {
 	api.HandleFunc("/new/player", CreatePlayerHandler).Methods("POST")
 	api.HandleFunc("/new/session", CreateSessionHandler).Methods("POST")
 
-	http.ListenAndServe(":3000", r)
+	fmt.Println("HTTP Server opening on port", PORT)
+	http.ListenAndServe(PORT, r)
 }

@@ -116,8 +116,9 @@ func CreateSession(realmID null.Int, name null.String, time null.Time, playerIDs
 
 	tx := db.MustBegin()
 	tx.QueryRow(insertSession, realmID, name, time).Scan(&sessionID)
-	tx.MustExec(mapPlayerToSession, 26, 4, 5, 10)
-	panic("test")
+	for id, _ := range playerIDs {
+		tx.MustExec(mapPlayerToSession, id, 10, 5, 10)
+	}
 	err := tx.Commit()
 
 	fmt.Println(sessionID)
