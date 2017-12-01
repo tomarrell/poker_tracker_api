@@ -86,10 +86,10 @@ func CreatePlayerHandler(w http.ResponseWriter, r *http.Request) {
 // Session management
 
 type sessionRequest struct {
-	RealmID   null.Int
-	Name      null.String
-	Time      null.Time
-	PlayerIDs []int
+	RealmID        null.Int
+	Name           null.String
+	Time           null.Time
+	PlayerSessions []db.PlayerSession
 }
 
 // CreateSessionHandler handles session creation
@@ -114,12 +114,12 @@ func CreateSessionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(sess.PlayerIDs) < 1 {
+	if len(sess.PlayerSessions) < 1 {
 		InvalidArgs(w, []string{"PlayerIDs"})
 		return
 	}
 
-	sessionID, err := db.CreateSession(sess.RealmID, sess.Name, sess.Time, sess.PlayerIDs)
+	sessionID, err := db.CreateSession(sess.RealmID, sess.Name, sess.Time, sess.PlayerSessions)
 
 	if err != nil {
 		RespondServerError(w, []string{"Failed to create new session", err.Error()})

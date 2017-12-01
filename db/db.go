@@ -100,7 +100,7 @@ func CreatePlayer(name null.String, realmID null.Int) (int, error) {
 }
 
 // CreateSession handles creating the session row and creating player_session records
-func CreateSession(realmID null.Int, name null.String, time null.Time, playerIDs []int) (int, error) {
+func CreateSession(realmID null.Int, name null.String, time null.Time, playerSessions []PlayerSession) (int, error) {
 	insertSession := `
 		INSERT INTO session (realm_id, name, time)
 		VALUES ($1, $2, $3)
@@ -114,14 +114,20 @@ func CreateSession(realmID null.Int, name null.String, time null.Time, playerIDs
 
 	var sessionID int
 
+	// Begin transaction
 	tx := db.MustBegin()
 	tx.QueryRow(insertSession, realmID, name, time).Scan(&sessionID)
-	for id, _ := range playerIDs {
-		tx.MustExec(mapPlayerToSession, id, 10, 5, 10)
+
+	for _, player := range playerSessions {
+		// Attempt to insert each players record into player_session
+		_, err := tx.Exec(mapPlayerToSession, player.PlayerID, sessionID, player.Buyin, player.Walkout)
+		// Rollback the transaction on a failure
+		if err != nil {
+			tx.Rollback()
+			return 0, err
+		}
 	}
 	err := tx.Commit()
-
-	fmt.Println(sessionID)
 
 	if err != nil {
 		fmt.Println("Failed to create new player")
