@@ -31,6 +31,8 @@ func main() {
 	api.HandleFunc("/new/player", CreatePlayerHandler).Methods("POST")
 	api.HandleFunc("/new/session", CreateSessionHandler).Methods("POST")
 
+	api.HandleFunc("/get/sessions/{realmID:[0-9]+}", GetSessionsHandler).Methods("GET")
+
 	fmt.Println("HTTP Server opening on port", PORT)
 	http.ListenAndServe(PORT, r)
 }

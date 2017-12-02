@@ -39,8 +39,8 @@ type Player struct {
 type PlayerSession struct {
 	PlayerID  int       `db:"player_id"`
 	SessionID int       `db:"session_id"`
-	Buyin     int       `db:"buyin"`
-	Walkout   int       `db:"walkout"`
+	Buyin     null.Int  `db:"buyin"`
+	Walkout   null.Int  `db:"walkout"`
 	CreatedAt time.Time `db:"created_at"`
 }
 
@@ -75,7 +75,7 @@ func CreateRealm(name null.String, title null.String) (int, error) {
 		return 0, err
 	}
 
-	fmt.Printf("Successfully created new realm id=%d name=\"%s\"", realmID, name.String)
+	fmt.Printf("Successfully created new realm id=%d name=\"%s\"\n", realmID, name.String)
 	return realmID, nil
 }
 
@@ -106,7 +106,6 @@ func CreateSession(realmID null.Int, name null.String, time null.Time, playerSes
 		VALUES ($1, $2, $3)
 		RETURNING id
 	`
-
 	mapPlayerToSession := `
 		INSERT INTO player_session (player_id, session_id, buyin, walkout)
 		VALUES ($1, $2, $3, $4)
@@ -119,9 +118,7 @@ func CreateSession(realmID null.Int, name null.String, time null.Time, playerSes
 	tx.QueryRow(insertSession, realmID, name, time).Scan(&sessionID)
 
 	for _, player := range playerSessions {
-		// Attempt to insert each players record into player_session
 		_, err := tx.Exec(mapPlayerToSession, player.PlayerID, sessionID, player.Buyin, player.Walkout)
-		// Rollback the transaction on a failure
 		if err != nil {
 			tx.Rollback()
 			return 0, err
@@ -134,6 +131,26 @@ func CreateSession(realmID null.Int, name null.String, time null.Time, playerSes
 		return 0, err
 	}
 
-	fmt.Printf("Successfully created new session id=%d name=\"%s\" time=\"%s\"", sessionID, name.String, time.Time)
+	fmt.Printf("Successfully created new session id=%d name=\"%s\" time=\"%s\"\n", sessionID, name.String, time.Time)
 	return sessionID, nil
+}
+
+// GetSessions returns an array of sessions given a realmID
+func GetSessions(realmID int) ([]Session, error) {
+	getSessions := `
+		SELECT *
+		FROM session
+		WHERE realm_id=$1
+	`
+
+	var sessions []Session
+
+	err := db.Select(&sessions, getSessions, realmID)
+
+	if err != nil {
+		fmt.Println("Failed to fetch sessions of realm")
+		return []Session{}, err
+	}
+
+	return sessions, nil
 }
