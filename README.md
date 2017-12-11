@@ -1,5 +1,7 @@
 # Poker API
 
+I currently have a DB running on Google Cloud Platform, it requires a whitelisted IP however and will be used as the prod DB. The details are also included below. 
+
 ## Setup
 1. Clone the repository
 2. `go get` to fetch Go dependencies
