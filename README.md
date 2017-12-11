@@ -11,6 +11,7 @@ I currently have a DB running on Google Cloud Platform, it requires a whiteliste
 
 ### Goose migration command
 For GCP: `goose postgres "host=35.197.168.240 user=postgres dbname=postgres password=gl1iKw8B1OCPIM5A sslmode=disable" up`
+
 For local: `goose postgres "host=[HOST] user=[USER] dbname=[DB_NAME] password=[PASSWORD] sslmode=disable" up`
 
 ## Todo:
