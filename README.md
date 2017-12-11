@@ -1,6 +1,6 @@
 # Poker API
 
-I currently have a DB running on Google Cloud Platform, it requires a whitelisted IP however and will be used as the prod DB. The details are also included below. 
+I currently have a DB running on Google Cloud Platform, it requires a whitelisted IP however and will be used as the prod DB. The details are also included below and in the code as I was using it during development when experimenting with GCP. 
 
 ## Setup
 1. Clone the repository
