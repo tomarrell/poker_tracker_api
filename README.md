@@ -1,5 +1,15 @@
 # Poker API
 
+## Vision for this project
+
+The goal for this project is for a user to be able to come to the site, enter a realm and be presented with a leaderboard, which shows an overview of all the players for each session up to the latest, showing interesting stats such as how much money has changed hands, the richets players etc. Eye candy graphs are a bonus. 
+
+They can then browse through the sessions sorted by the time they occurred. Viewing a session will show the players who were present, their winnings and losses during that session, and the total that they were on up to that point.
+
+The user is then able to create a new session, this will present him with a list of the regular player which he can tick to indicate they played and enter in their buyin/walkout amounts. At the bottom of the list will be a button to create a new player, this will add the player to the `player` table and link them to that realm. Once the new session has been filled out and submitted, a record of each player who played will be inserted into the mapping table `player_session` tying the player to a newly created session in the `session` table.
+
+## Prod DB
+
 I currently have a DB running on Google Cloud Platform, it requires a whitelisted IP however and will be used as the prod DB. The details are also included below and in the code as I was using it during development when experimenting with GCP. 
 
 ## Setup
