@@ -2,7 +2,7 @@
 
 ## Vision for this project
 
-The goal for this project is for a user to be able to come to the site, enter a realm and be presented with a leaderboard, which shows an overview of all the players for each session up to the latest, showing interesting stats such as how much money has changed hands, the richets players etc. Eye candy graphs are a bonus. 
+The goal for this project is for a user to be able to come to the site, enter a realm and be presented with a leaderboard, which shows an overview of all the players for each session up to the latest, showing interesting stats such as how much money has changed hands, the richest players etc. Eye candy graphs are a bonus. 
 
 They can then browse through the sessions sorted by the time they occurred. Viewing a session will show the players who were present, their winnings and losses during that session, and the total that they were on up to that point.
 
