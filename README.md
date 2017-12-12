@@ -31,6 +31,8 @@ For GCP: `goose postgres "host=35.197.168.240 user=postgres dbname=postgres pass
 
 For local after running docker-compose: `goose postgres "host=localhost:5432 user=postgres dbname=pokerapi password=crimsonsux sslmode=disable" up`
 
+For local after running docker-compose (work for Tom-Linux):`goose postgres "host=localhost user=postgres dbname=postgres password=crimsonsux sslmode=disable" up`
+
 ## Todo:
 - Implement better request body validation
 - Cleanup response methods
