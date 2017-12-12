@@ -12,9 +12,15 @@ The user is then able to create a new session, this will present him with a list
 
 I currently have a DB running on Google Cloud Platform, it requires a whitelisted IP however and will be used as the prod DB. The details are also included below and in the code as I was using it during development when experimenting with GCP. 
 
+## Prerequisites
+
+- golang version 1.8 or greater
+- https://github.com/golang/dep
+
 ## Setup
+
 1. Clone the repository
-2. `go get` to fetch Go dependencies
+2. `dep ensure` to resolve dependencies
 3. Run a local version of postgres, change the hostname, user, dbname and password info in main.go
 4. `cd` into `/db/migrations` and with https://github.com/pressly/goose run the goose command below, with your DB details inserted to run the migrations and setup your database
 5. Run `go run` inside the root directory to run the service on port `3000`
@@ -27,3 +33,5 @@ For local: `goose postgres "host=[HOST] user=[USER] dbname=[DB_NAME] password=[P
 ## Todo:
 - Implement better request body validation
 - Cleanup response methods
+- Dockerize and docker-compose local dependencies for testing
+
