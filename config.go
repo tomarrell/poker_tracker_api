@@ -18,20 +18,21 @@ func mustParseConfig() config {
 		file string
 		c    config
 	)
+
 	flag.StringVar(&file, "config", "", "Config file")
 	flag.Parse()
 
 	if file == "" {
-		flag.Usage()
-		log.Fatal("Config file is required")
+		log.Warn("Config file not found in parameters, fallback to default: config.yaml")
+		file = "config.yaml"
 	}
 
-	byts, err := ioutil.ReadFile(file)
+	bytes, err := ioutil.ReadFile(file)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if err = yaml.Unmarshal(byts, &c); err != nil {
+	if err = yaml.Unmarshal(bytes, &c); err != nil {
 		log.Fatal(err)
 	}
 	log.Infof("Loaded config %#v", c)
