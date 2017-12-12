@@ -1,0 +1,8 @@
+postgresdb:
+  container_name: postgresdb
+  image: postgres:10.1-alpine
+  restart: always
+  ports:
+    - "5432:5432"
+  environment:
+    POSTGRES_PASSWORD: crimsonsux

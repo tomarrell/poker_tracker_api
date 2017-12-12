@@ -4,19 +4,21 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/tomarrell/poker_tracker_api/db"
 	"gopkg.in/guregu/null.v3"
 )
 
 // Realm Management
 
+type mutationHandler struct {
+	db *postgresDb
+}
 type realmRequest struct {
 	Name  null.String
 	Title null.String
 }
 
 // CreateRealmHandler handles realm creation
-func CreateRealmHandler(w http.ResponseWriter, r *http.Request) {
+func (m *mutationHandler) CreateRealmHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	var realm realmRequest
 
@@ -32,7 +34,7 @@ func CreateRealmHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	realmID, err := db.CreateRealm(realm.Name, realm.Title)
+	realmID, err := m.db.CreateRealm(realm.Name, realm.Title)
 
 	if err != nil {
 		RespondServerError(w, []string{"Failed to create realm", err.Error()})
@@ -51,7 +53,7 @@ type playerRequest struct {
 }
 
 // CreatePlayerHandler handles player creation
-func CreatePlayerHandler(w http.ResponseWriter, r *http.Request) {
+func (m *mutationHandler) CreatePlayerHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	var player playerRequest
 
@@ -72,7 +74,7 @@ func CreatePlayerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	playerID, err := db.CreatePlayer(player.Name, player.RealmID)
+	playerID, err := m.db.CreatePlayer(player.Name, player.RealmID)
 
 	if err != nil {
 		RespondServerError(w, []string{"Failed to create new player", err.Error()})
@@ -89,11 +91,11 @@ type sessionRequest struct {
 	RealmID        null.Int
 	Name           null.String
 	Time           null.Time
-	PlayerSessions []db.PlayerSession
+	PlayerSessions []PlayerSession
 }
 
 // CreateSessionHandler handles session creation
-func CreateSessionHandler(w http.ResponseWriter, r *http.Request) {
+func (m *mutationHandler) CreateSessionHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
 	var sess sessionRequest
@@ -119,7 +121,7 @@ func CreateSessionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sessionID, err := db.CreateSession(sess.RealmID, sess.Name, sess.Time, sess.PlayerSessions)
+	sessionID, err := m.db.CreateSession(sess.RealmID, sess.Name, sess.Time, sess.PlayerSessions)
 
 	if err != nil {
 		RespondServerError(w, []string{"Failed to create new session", err.Error()})

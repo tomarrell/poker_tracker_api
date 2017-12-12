@@ -6,10 +6,13 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/tomarrell/poker_tracker_api/db"
 )
 
-func GetSessionsHandler(w http.ResponseWriter, r *http.Request) {
+type queryHandler struct {
+	db *postgresDb
+}
+
+func (q *queryHandler) GetSessionsHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	fmt.Println(vars["realmID"])
 
@@ -20,13 +23,13 @@ func GetSessionsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sessions, err := db.GetSessions(realmID)
+	sessions, err := q.db.GetSessions(realmID)
 
 	if err != nil {
 		RespondServerError(w, []string{"Failed to fetch sessions of realm", err.Error()})
 		return
 	}
 
-	resp := struct{ Sessions []db.Session }{sessions}
+	resp := struct{ Sessions []Session }{sessions}
 	SuccessWithJSON(w, resp)
 }

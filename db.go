@@ -1,14 +1,13 @@
-package db
+package main
 
 import (
 	"fmt"
 	"time"
 
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 	"gopkg.in/guregu/null.v3"
 )
-
-var db *sqlx.DB
 
 // Realm DB table
 type Realm struct {
@@ -44,23 +43,28 @@ type PlayerSession struct {
 	CreatedAt time.Time `db:"created_at"`
 }
 
-// InitDB initializes the database connection
-func InitDB(dbType string, dbInfo string) {
-	var err error
-	db, err = sqlx.Open(dbType, dbInfo)
+type postgresDb struct {
+	db *sqlx.DB
+}
 
-	if err != nil {
+// InitDB initializes the database connection
+func mustInitDB(dbType string, dbInfo string) *postgresDb {
+
+	db := sqlx.MustOpen(dbType, dbInfo)
+	if err := db.Ping(); err != nil {
 		panic(err)
 	}
+
+	return &postgresDb{db}
 }
 
 // Close database method
-func Close() {
-	db.Close()
+func (p *postgresDb) Close() {
+	p.db.Close()
 }
 
 // CreateRealm method
-func CreateRealm(name null.String, title null.String) (int, error) {
+func (p *postgresDb) CreateRealm(name null.String, title null.String) (int, error) {
 	insertRealm := `
 		INSERT INTO realm (name, title)
 		VALUES ($1, $2)
@@ -68,7 +72,7 @@ func CreateRealm(name null.String, title null.String) (int, error) {
 	`
 
 	var realmID int
-	err := db.QueryRow(insertRealm, name, title).Scan(&realmID)
+	err := p.db.QueryRow(insertRealm, name, title).Scan(&realmID)
 
 	if err != nil {
 		fmt.Println("Failed to create new realm:", err.Error())
@@ -80,7 +84,7 @@ func CreateRealm(name null.String, title null.String) (int, error) {
 }
 
 // CreatePlayer method
-func CreatePlayer(name null.String, realmID null.Int) (int, error) {
+func (p *postgresDb) CreatePlayer(name null.String, realmID null.Int) (int, error) {
 	insertPlayer := `
 		INSERT INTO player (name, realm_id)
 		VALUES ($1, $2)
@@ -88,7 +92,7 @@ func CreatePlayer(name null.String, realmID null.Int) (int, error) {
 	`
 
 	var playerID int
-	err := db.QueryRow(insertPlayer, name, realmID).Scan(&playerID)
+	err := p.db.QueryRow(insertPlayer, name, realmID).Scan(&playerID)
 
 	if err != nil {
 		fmt.Println("Failed to create new player")
@@ -100,7 +104,7 @@ func CreatePlayer(name null.String, realmID null.Int) (int, error) {
 }
 
 // CreateSession handles creating the session row and creating player_session records
-func CreateSession(realmID null.Int, name null.String, time null.Time, playerSessions []PlayerSession) (int, error) {
+func (p *postgresDb) CreateSession(realmID null.Int, name null.String, time null.Time, playerSessions []PlayerSession) (int, error) {
 	insertSession := `
 		INSERT INTO session (realm_id, name, time)
 		VALUES ($1, $2, $3)
@@ -114,7 +118,7 @@ func CreateSession(realmID null.Int, name null.String, time null.Time, playerSes
 	var sessionID int
 
 	// Begin transaction
-	tx := db.MustBegin()
+	tx := p.db.MustBegin()
 	tx.QueryRow(insertSession, realmID, name, time).Scan(&sessionID)
 
 	for _, player := range playerSessions {
@@ -136,7 +140,7 @@ func CreateSession(realmID null.Int, name null.String, time null.Time, playerSes
 }
 
 // GetSessions returns an array of sessions given a realmID
-func GetSessions(realmID int) ([]Session, error) {
+func (p *postgresDb) GetSessions(realmID int) ([]Session, error) {
 	getSessions := `
 		SELECT *
 		FROM session
@@ -145,7 +149,7 @@ func GetSessions(realmID int) ([]Session, error) {
 
 	var sessions []Session
 
-	err := db.Select(&sessions, getSessions, realmID)
+	err := p.db.Select(&sessions, getSessions, realmID)
 
 	if err != nil {
 		fmt.Println("Failed to fetch sessions of realm")

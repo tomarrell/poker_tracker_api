@@ -1,38 +1,30 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 
-	_ "github.com/GoogleCloudPlatform/cloudsql-proxy/proxy/dialers/postgres"
+	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
-	"github.com/tomarrell/poker_tracker_api/db"
 )
 
 func main() {
-	dbInfo := `
-		host=tom-personal:australia-southeast1:tom-personal
-		user=postgres
-		dbname=postgres
-		password=gl1iKw8B1OCPIM5A
-		sslmode=disable
-	`
-	dbType := "cloudsqlpostgres"
-	PORT := ":3000"
-
-	db.InitDB(dbType, dbInfo)
+	conf := mustParseConfig()
+	db := mustInitDB("postgres", conf.DSN)
 	defer db.Close()
+
+	qh := queryHandler{db}
+	mh := mutationHandler{db}
 
 	// Set up routing
 	r := mux.NewRouter()
 	api := r.PathPrefix("/api").Subrouter()
 
-	api.HandleFunc("/new/realm", CreateRealmHandler).Methods("POST")
-	api.HandleFunc("/new/player", CreatePlayerHandler).Methods("POST")
-	api.HandleFunc("/new/session", CreateSessionHandler).Methods("POST")
+	api.HandleFunc("/realm", mh.CreateRealmHandler).Methods("POST")
+	api.HandleFunc("/player", mh.CreatePlayerHandler).Methods("POST")
+	api.HandleFunc("/session", mh.CreateSessionHandler).Methods("POST")
 
-	api.HandleFunc("/get/sessions/{realmID:[0-9]+}", GetSessionsHandler).Methods("GET")
+	api.HandleFunc("/sessions/{realmID:[0-9]+}", qh.GetSessionsHandler).Methods("GET")
 
-	fmt.Println("HTTP Server opening on port", PORT)
-	http.ListenAndServe(PORT, r)
+	log.Infof("starting server on %s", conf.ListenAddress)
+	http.ListenAndServe(conf.ListenAddress, r)
 }
