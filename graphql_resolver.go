@@ -13,26 +13,31 @@ type GQLRealm struct {
 	Name  string
 	Title *string
 }
+
 type GQLPlayer struct {
 	ID      graphql.ID
 	RealmID graphql.ID
 	Name    string
 }
+
 type GQLSession struct {
 	ID      graphql.ID
 	RealmID graphql.ID
 	Name    *string
 	Time    string
 }
+
 type GQLPlayerSession struct {
 	PlayerID  graphql.ID
 	SessionID graphql.ID
 	BuyIn     int
 	Walkout   int
 }
+
 type Resolver struct {
 	db *postgresDb
 }
+
 type realmResolver struct {
 	r *GQLRealm
 }
@@ -40,13 +45,13 @@ type realmResolver struct {
 func (r *realmResolver) ID() graphql.ID {
 	return r.r.ID
 }
+
 func (r *realmResolver) Name() string {
 	return r.r.Name
-
 }
+
 func (r *realmResolver) Title() *string {
 	return r.r.Title
-
 }
 
 type playerResolver struct {
@@ -56,10 +61,11 @@ type playerResolver struct {
 func (p *playerResolver) ID() graphql.ID {
 	return p.p.ID
 }
+
 func (p *playerResolver) Name() string {
 	return p.p.Name
-
 }
+
 func (p *playerResolver) RealmID() graphql.ID {
 	return p.p.RealmID
 }
@@ -71,13 +77,16 @@ type sessionResolver struct {
 func (s *sessionResolver) ID() graphql.ID {
 	return s.s.ID
 }
+
 func (s *sessionResolver) Name() *string {
 	return s.s.Name
 
 }
+
 func (s *sessionResolver) RealmID() graphql.ID {
 	return s.s.RealmID
 }
+
 func (s *sessionResolver) Time() string {
 	return s.s.Time
 }
@@ -89,13 +98,15 @@ type playerSessionResolver struct {
 func (ps *playerSessionResolver) PlayerID() graphql.ID {
 	return ps.ps.PlayerID
 }
+
 func (ps *playerSessionResolver) SessionID() graphql.ID {
 	return ps.ps.SessionID
 }
+
 func (ps *playerSessionResolver) BuyIn() int {
 	return ps.ps.BuyIn
-
 }
+
 func (ps *playerSessionResolver) WalkOut() int {
 	return ps.ps.Walkout
 }
