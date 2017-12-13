@@ -158,3 +158,54 @@ func (p *postgresDb) GetSessions(realmID int) ([]Session, error) {
 
 	return sessions, nil
 }
+
+func (p *postgresDb) GetSessionById(id int) (*Session, error) {
+	getSessions := `
+		SELECT *
+		FROM session
+		WHERE id=$1
+	`
+
+	var session Session
+
+	err := p.db.Get(&session, getSessions, id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &session, nil
+}
+
+func (p *postgresDb) GetPlayerById(id int) (*Player, error) {
+	getPlayers := `
+		SELECT *
+		FROM player
+		WHERE id=$1
+	`
+
+	var player Player
+
+	err := p.db.Get(&player, getPlayers, id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &player, nil
+}
+
+func (p *postgresDb) GetRealmByName(name string) (*Realm, error) {
+	q := `
+		SELECT *
+		FROM realm
+		WHERE name=$1
+	`
+	var realm Realm
+	err := p.db.Get(&realm, q, name)
+	if err != nil {
+		return nil, err
+	}
+
+	return &realm, nil
+}
