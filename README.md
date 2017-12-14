@@ -32,7 +32,5 @@ For GCP: `goose postgres "host=35.197.168.240 user=postgres dbname=postgres pass
 For local after running docker-compose: `goose postgres "host=localhost user=postgres dbname=postgres password=crimsonsux sslmode=disable" up`
 
 ## Todo:
-- Implement better request body validation
-- Cleanup response methods
-- Dockerize and docker-compose local dependencies for testing
+See active [Issues](https://github.com/tomarrell/poker_tracker_api/issues) 
 
