@@ -25,6 +25,7 @@ I currently have a DB running on Google Cloud Platform, it requires a whiteliste
 3. Run `docker-compose up` to bring up local postgres db
 4. `cd` into `/migrations` and with https://github.com/pressly/goose run the goose command below, with your DB details inserted to run the migrations and setup your database
 5. Run `go install && poker_tracker_api --config=config.yaml` inside the root directory to run the service on port `8080`
+6. Navigate to `localhost:8080/` to view graphql interface
 
 ### Goose migration command
 For GCP: `goose postgres "host=35.197.168.240 user=postgres dbname=postgres password=gl1iKw8B1OCPIM5A sslmode=disable" up`
