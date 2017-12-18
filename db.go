@@ -84,23 +84,22 @@ func (p *postgresDb) CreateRealm(name null.String, title null.String) (Realm, er
 }
 
 // CreatePlayer method
-func (p *postgresDb) CreatePlayer(name null.String, realmID null.Int) (int, error) {
+func (p *postgresDb) CreatePlayer(name null.String, realmID null.Int) (Player, error) {
 	insertPlayer := `
 		INSERT INTO player (name, realm_id)
 		VALUES ($1, $2)
 		RETURNING id
 	`
-
-	var playerID int
-	err := p.db.QueryRow(insertPlayer, name, realmID).Scan(&playerID)
+	var player Player
+	err := p.db.QueryRow(insertPlayer, name, realmID).Scan(&player.ID, &player.Name, &player.RealmID)
 
 	if err != nil {
 		fmt.Println("Failed to create new player")
-		return 0, err
+		return Player{}, err
 	}
 
-	fmt.Printf("Successfully created new player id=%d name=\"%s\"\n", playerID, name.String)
-	return playerID, nil
+	fmt.Printf("Successfully created new player id=%d name=\"%s\"\n", player.ID, name.String)
+	return player, nil
 }
 
 // CreateSession handles creating the session row and creating player_session records

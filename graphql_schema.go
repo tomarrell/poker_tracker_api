@@ -3,6 +3,7 @@ package main
 const gqlSchema = `
 schema {
 		query: Query
+		mutation: Mutation
 	}
 
 	# The query type, represents all of the entry points into our object graph
@@ -11,6 +12,13 @@ schema {
 		sessionById(id: ID!): Session
 		sessionsByRealmId(realmId: ID!): [Session]
 		playerById(id: ID!): Player
+	}
+
+	# Mutation type, reprsents all modifications available
+
+	type Mutation {
+		createRealm(name: String!, title: String): Realm
+		createPlayer(name: String!, realmId: ID!): Player
 	}
 
 	type Player {
