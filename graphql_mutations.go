@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"strconv"
 
 	graphql "github.com/neelance/graphql-go"
 	"gopkg.in/guregu/null.v3"
@@ -25,7 +26,7 @@ func (r *Resolver) CreateRealm(args CreateRealm) (*RealmResolver, error) {
 	}
 
 	return &RealmResolver{&GQLRealm{
-		ID:    graphql.ID(realm.ID),
+		ID:    graphql.ID(strconv.Itoa(realm.ID)),
 		Name:  realm.Name,
 		Title: realm.Title.Ptr(),
 	}}, nil
@@ -34,7 +35,7 @@ func (r *Resolver) CreateRealm(args CreateRealm) (*RealmResolver, error) {
 // CreatePlayer args struct
 type CreatePlayer struct {
 	Name    string
-	RealmID int
+	RealmID int32
 }
 
 // CreatePlayer mutation
@@ -54,8 +55,8 @@ func (r *Resolver) CreatePlayer(args CreatePlayer) (*PlayerResolver, error) {
 	}
 
 	return &PlayerResolver{&GQLPlayer{
-		ID:      graphql.ID(player.ID),
+		ID:      graphql.ID(strconv.Itoa(player.ID)),
 		Name:    player.Name,
-		RealmID: graphql.ID(player.RealmID),
+		RealmID: graphql.ID(strconv.Itoa(player.RealmID)),
 	}}, nil
 }

@@ -88,7 +88,7 @@ func (p *postgresDb) CreatePlayer(name null.String, realmID null.Int) (Player, e
 	insertPlayer := `
 		INSERT INTO player (name, realm_id)
 		VALUES ($1, $2)
-		RETURNING id
+		RETURNING id, name, realm_id
 	`
 	var player Player
 	err := p.db.QueryRow(insertPlayer, name, realmID).Scan(&player.ID, &player.Name, &player.RealmID)

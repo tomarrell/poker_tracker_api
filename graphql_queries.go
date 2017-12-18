@@ -20,7 +20,7 @@ func (r *Resolver) RealmByName(args struct{ Name string }) (*RealmResolver, erro
 	}
 
 	return &RealmResolver{&GQLRealm{
-		ID:    graphql.ID(realm.ID),
+		ID:    graphql.ID(strconv.Itoa(realm.ID)),
 		Name:  realm.Name,
 		Title: realm.Title.Ptr(),
 	}}, nil

@@ -1,6 +1,2 @@
 poker_tracker_api
 vendor/**/
-# Delve debug file
-debug
-# VS code launch options
-.vscode/
