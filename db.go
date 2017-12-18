@@ -64,23 +64,23 @@ func (p *postgresDb) Close() {
 }
 
 // CreateRealm method
-func (p *postgresDb) CreateRealm(name null.String, title null.String) (int, error) {
+func (p *postgresDb) CreateRealm(name null.String, title null.String) (Realm, error) {
 	insertRealm := `
 		INSERT INTO realm (name, title)
 		VALUES ($1, $2)
-		RETURNING id
+		RETURNING id, name, title, created_at
 	`
 
-	var realmID int
-	err := p.db.QueryRow(insertRealm, name, title).Scan(&realmID)
+	var realm Realm
+	err := p.db.QueryRow(insertRealm, name, title).Scan(&realm.ID, &realm.Name, &realm.Title, &realm.CreatedAt)
 
 	if err != nil {
 		fmt.Println("Failed to create new realm:", err.Error())
-		return 0, err
+		return Realm{}, err
 	}
 
-	fmt.Printf("Successfully created new realm id=%d name=\"%s\"\n", realmID, name.String)
-	return realmID, nil
+	fmt.Printf("Successfully created new realm id=%d name=\"%s\"\n", realm.ID, name.String)
+	return realm, nil
 }
 
 // CreatePlayer method
@@ -148,7 +148,6 @@ func (p *postgresDb) GetSessions(realmID int) ([]Session, error) {
 	`
 
 	var sessions []Session
-
 	err := p.db.Select(&sessions, getSessions, realmID)
 
 	if err != nil {
@@ -159,7 +158,7 @@ func (p *postgresDb) GetSessions(realmID int) ([]Session, error) {
 	return sessions, nil
 }
 
-func (p *postgresDb) GetSessionById(id int) (*Session, error) {
+func (p *postgresDb) GetSessionByID(id int) (*Session, error) {
 	getSessions := `
 		SELECT *
 		FROM session
@@ -167,17 +166,17 @@ func (p *postgresDb) GetSessionById(id int) (*Session, error) {
 	`
 
 	var session Session
-
 	err := p.db.Get(&session, getSessions, id)
 
 	if err != nil {
+		fmt.Println("Failed to fetch sessions by ID")
 		return nil, err
 	}
 
 	return &session, nil
 }
 
-func (p *postgresDb) GetPlayerById(id int) (*Player, error) {
+func (p *postgresDb) GetPlayerByID(id int) (*Player, error) {
 	getPlayers := `
 		SELECT *
 		FROM player
@@ -185,10 +184,10 @@ func (p *postgresDb) GetPlayerById(id int) (*Player, error) {
 	`
 
 	var player Player
-
 	err := p.db.Get(&player, getPlayers, id)
 
 	if err != nil {
+		fmt.Println("Failed to fetch player by ID")
 		return nil, err
 	}
 
@@ -201,9 +200,12 @@ func (p *postgresDb) GetRealmByName(name string) (*Realm, error) {
 		FROM realm
 		WHERE name=$1
 	`
+
 	var realm Realm
 	err := p.db.Get(&realm, q, name)
+
 	if err != nil {
+		fmt.Println("Failed to fetch realm by name")
 		return nil, err
 	}
 

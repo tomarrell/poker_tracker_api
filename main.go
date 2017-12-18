@@ -20,7 +20,7 @@ func main() {
 	}))
 	http.Handle("/graphql", &relay.Handler{Schema: schema})
 
-	log.Infof("starting server on %s", conf.ListenAddress)
+	log.Infof("Starting server on %s", conf.ListenAddress)
 	log.Fatal(http.ListenAndServe(conf.ListenAddress, nil))
 }
 
