@@ -19,6 +19,7 @@ schema {
 	type Mutation {
 		createRealm(name: String!, title: String): Realm
 		createPlayer(name: String!, realmId: ID!): Player
+		createSession(name: String!, realmId: ID!, time: String!, playerSessions: [CreateSessionPlayerSession]!): Session
 	}
 
 	type Player {
@@ -43,6 +44,12 @@ schema {
 	type PlayerSession {
 		playerId: ID!
 		sessionId: ID!
+		buyin: Int!
+		walkout: Int!
+	}
+
+	input CreateSessionPlayerSession {
+		playerId: ID!
 		buyin: Int!
 		walkout: Int!
 	}

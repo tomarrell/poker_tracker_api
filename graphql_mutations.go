@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"strconv"
+	"time"
 
 	graphql "github.com/neelance/graphql-go"
 	"gopkg.in/guregu/null.v3"
@@ -58,5 +59,55 @@ func (r *Resolver) CreatePlayer(args CreatePlayer) (*PlayerResolver, error) {
 		ID:      graphql.ID(strconv.Itoa(player.ID)),
 		Name:    player.Name,
 		RealmID: graphql.ID(strconv.Itoa(player.RealmID)),
+	}}, nil
+}
+
+// CreateSessionPlayerSession args struct
+type CreateSessionPlayerSession struct {
+	PlayerID int32
+	Buyin    int32
+	Walkout  int32
+}
+
+// CreateSession args struct
+type CreateSession struct {
+	Name           string
+	RealmID        int32
+	Time           string
+	PlayerSessions []*CreateSessionPlayerSession
+}
+
+// CreateSession mutation
+func (r *Resolver) CreateSession(args CreateSession) (*SessionResolver, error) {
+	// TODO: Argument validation
+
+	parsedTime, err := time.Parse(time.RFC3339, args.Time)
+	if err != nil {
+		return nil, err
+	}
+
+	var playerSessions = make([]PlayerSession, len(args.PlayerSessions))
+	for i, csps := range args.PlayerSessions {
+		playerSessions[i] = PlayerSession{
+			PlayerID: int(csps.PlayerID),
+			Buyin:    null.IntFrom(int64(csps.Buyin)),
+			Walkout:  null.IntFrom(int64(csps.Walkout)),
+		}
+	}
+
+	session, err := r.db.CreateSession(
+		null.IntFrom(int64(args.RealmID)),
+		null.StringFrom(args.Name),
+		null.TimeFrom(parsedTime),
+		playerSessions)
+
+	if err != nil {
+		return nil, err
+	}
+	return &SessionResolver{&GQLSession{
+		ID:      graphql.ID(strconv.Itoa(session.ID)),
+		Name:    session.Name.Ptr(),
+		RealmID: graphql.ID(strconv.Itoa(session.RealmID)),
+		Time:    session.Time.Format(time.RFC3339),
 	}}, nil
 }

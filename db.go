@@ -103,39 +103,52 @@ func (p *postgresDb) CreatePlayer(name null.String, realmID null.Int) (Player, e
 }
 
 // CreateSession handles creating the session row and creating player_session records
-func (p *postgresDb) CreateSession(realmID null.Int, name null.String, time null.Time, playerSessions []PlayerSession) (int, error) {
+func (p *postgresDb) CreateSession(realmID null.Int, name null.String, time null.Time, playerSessions []PlayerSession) (Session, error) {
 	insertSession := `
 		INSERT INTO session (realm_id, name, time)
 		VALUES ($1, $2, $3)
-		RETURNING id
+		RETURNING id, realm_id, name, time
 	`
 	mapPlayerToSession := `
 		INSERT INTO player_session (player_id, session_id, buyin, walkout)
 		VALUES ($1, $2, $3, $4)
 	`
 
-	var sessionID int
+	insertTransactionForPlayer := `
+		INSERT INTO "transaction" (player_id, amount, session_id, reason)
+		VALUES($1, $2, $3, $4)
+	`
+
+	var session Session
 
 	// Begin transaction
 	tx := p.db.MustBegin()
-	tx.QueryRow(insertSession, realmID, name, time).Scan(&sessionID)
+	tx.QueryRow(insertSession, realmID, name, time).Scan(&session.ID, &session.RealmID, &session.Name, &session.Time)
 
 	for _, player := range playerSessions {
-		_, err := tx.Exec(mapPlayerToSession, player.PlayerID, sessionID, player.Buyin, player.Walkout)
+		_, err := tx.Exec(mapPlayerToSession, player.PlayerID, session.ID, player.Buyin, player.Walkout)
 		if err != nil {
 			tx.Rollback()
-			return 0, err
+			return session, err
+		}
+
+		var amount = player.Buyin.Int64 - player.Walkout.Int64
+		_, err = tx.Exec(insertTransactionForPlayer, player.PlayerID, amount, session.ID, "Session Participation")
+		if err != nil {
+			tx.Rollback()
+			return session, err
 		}
 	}
+
 	err := tx.Commit()
 
 	if err != nil {
-		fmt.Println("Failed to create new player")
-		return 0, err
+		fmt.Println("Failed to record new session")
+		return session, err
 	}
 
-	fmt.Printf("Successfully created new session id=%d name=\"%s\" time=\"%s\"\n", sessionID, name.String, time.Time)
-	return sessionID, nil
+	fmt.Printf("Successfully created new session id=%d name=\"%s\" time=\"%s\"\n", session.ID, session.Name.String, session.Time.String())
+	return session, nil
 }
 
 // GetSessions returns an array of sessions given a realmID
