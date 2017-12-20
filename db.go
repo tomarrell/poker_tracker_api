@@ -114,8 +114,8 @@ func (p *postgresDb) CreateSession(realmID null.Int, name null.String, time null
 		VALUES ($1, $2, $3, $4)
 	`
 
-	insertTransactionForPlayer := `
-		INSERT INTO "transaction" (player_id, amount, session_id, reason)
+	insertTransferForPlayer := `
+		INSERT INTO transfer (player_id, amount, session_id, reason)
 		VALUES($1, $2, $3, $4)
 	`
 
@@ -133,7 +133,7 @@ func (p *postgresDb) CreateSession(realmID null.Int, name null.String, time null
 		}
 
 		var amount = player.Buyin.Int64 - player.Walkout.Int64
-		_, err = tx.Exec(insertTransactionForPlayer, player.PlayerID, amount, session.ID, "Session Participation")
+		_, err = tx.Exec(insertTransferForPlayer, player.PlayerID, amount, session.ID, "Session Participation")
 		if err != nil {
 			tx.Rollback()
 			return session, err

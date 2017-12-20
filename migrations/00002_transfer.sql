@@ -1,5 +1,5 @@
 -- +goose Up
-CREATE TABLE "transaction" (
+CREATE TABLE "transfer" (
     "id" serial,
     "player_id" int NOT NULL,
     "amount" int NOT NULL,
@@ -12,4 +12,4 @@ CREATE TABLE "transaction" (
 );
 
 -- +goose Down
-DROP TABLE "transaction"
+DROP TABLE "transfer"
