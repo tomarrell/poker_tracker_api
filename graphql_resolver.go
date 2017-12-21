@@ -6,9 +6,11 @@ import (
 
 // GQLRealm struct
 type GQLRealm struct {
-	ID    graphql.ID
-	Name  string
-	Title *string
+	ID       graphql.ID
+	Name     string
+	Title    *string
+	Players  []graphql.ID
+	Sessions []graphql.ID
 }
 
 // GQLPlayer struct
@@ -44,7 +46,8 @@ type Resolver struct {
 
 // RealmResolver struct
 type RealmResolver struct {
-	r *GQLRealm
+	r  *GQLRealm
+	db *postgresDb
 }
 
 // ID getter

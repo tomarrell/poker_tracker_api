@@ -9,6 +9,7 @@ schema {
 	# The query type, represents all of the entry points into our object graph
 	type Query {
 		realmByName(name: String!): Realm
+		realmById(id: ID!): Realm
 		sessionById(id: ID!): Session
 		sessionsByRealmId(realmId: ID!): [Session]
 		playerById(id: ID!): Player
@@ -32,6 +33,8 @@ schema {
 		id: ID!
 		name: String!
 		title: String
+		players: [Player]!
+		sessions: [Session]!
 	}
 
 	type Session {
