@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"os"
 
 	log "github.com/Sirupsen/logrus"
 	graphql "github.com/neelance/graphql-go"
@@ -9,6 +10,7 @@ import (
 )
 
 func main() {
+
 	conf := mustParseConfig()
 	db := mustInitDB("postgres", conf.DSN)
 	defer db.Close()
@@ -20,8 +22,16 @@ func main() {
 	}))
 	http.Handle("/graphql", &relay.Handler{Schema: schema})
 
-	log.Infof("Starting server on %s", conf.ListenAddress)
-	log.Fatal(http.ListenAndServe(conf.ListenAddress, nil))
+	// heroku defines an ENV var that is the port that should be exposed
+	port := os.Getenv("PORT")
+
+	listenAddress := ":" + port
+	if port == "" {
+		listenAddress = conf.ListenAddress
+	}
+
+	log.Infof("Starting server on %s", listenAddress)
+	log.Fatal(http.ListenAndServe(listenAddress, nil))
 }
 
 var page = []byte(`

@@ -10,7 +10,19 @@ The user is then able to create a new session, this will present him with a list
 
 ## Prod DB
 
-I currently have a DB running on Google Cloud Platform, it requires a whitelisted IP however and will be used as the prod DB. The details are also included below and in the code as I was using it during development when experimenting with GCP. 
+Currently running in heroku as an add on. See heroku.config.yaml for prod credentials.
+
+## Prod Deployment
+
+Currently deployed on heroku, running on [https://poker-tracker-api.herokuapp.com/](https://poker-tracker-api.herokuapp.com/)
+
+To deploy to heroku you'll need the heroku CLI installed. Then...
+
+```
+heroku login
+heroku git:remote -a poker-tracker-api
+git push heroku [your-branch-name-here]:master
+```
 
 ## Prerequisites
 
@@ -28,7 +40,8 @@ I currently have a DB running on Google Cloud Platform, it requires a whiteliste
 6. Navigate to `localhost:8080/` to view graphql interface
 
 ### Goose migration command
-For GCP: `goose postgres "host=35.197.168.240 user=postgres dbname=postgres password=gl1iKw8B1OCPIM5A sslmode=disable" up`
+For heroku, see the dsn defined in heroku.config.yaml, EG: ```goose postgres "dbname=d37n08r6dnuggm host=ec2-54-163-233-103.compute-1.amazonaws.com port=5432 user=ugkwkagwazrgyq password=4daf38121a11e00ef4afe12565e3858b6e20e4519e752ad1bba487d5dda3b681"```
+
 
 For local after running docker-compose: `goose postgres "host=localhost user=postgres dbname=pokerapi password=crimsonsux sslmode=disable" up`
 
