@@ -30,7 +30,7 @@ func (r *Resolver) CreateRealm(args CreateRealm) (*RealmResolver, error) {
 		ID:    graphql.ID(strconv.Itoa(realm.ID)),
 		Name:  realm.Name,
 		Title: realm.Title.Ptr(),
-	}}, nil
+	}, r.db}, nil
 }
 
 // CreatePlayer args struct

@@ -44,7 +44,8 @@ type Resolver struct {
 
 // RealmResolver struct
 type RealmResolver struct {
-	r *GQLRealm
+	r  *GQLRealm
+	db *postgresDb
 }
 
 // ID getter

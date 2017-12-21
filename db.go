@@ -151,7 +151,7 @@ func (p *postgresDb) CreateSession(realmID null.Int, name null.String, time null
 }
 
 // GetSessions returns an array of sessions given a realmID
-func (p *postgresDb) GetSessions(realmID int) ([]Session, error) {
+func (p *postgresDb) GetSessionsByRealmID(realmID int) ([]Session, error) {
 	getSessions := `
 		SELECT *
 		FROM session
@@ -199,16 +199,33 @@ func (p *postgresDb) GetPlayerByID(id int) (*Player, error) {
 	return &player, nil
 }
 
-func (p *postgresDb) GetRealmByName(name string) (*Realm, error) {
-	q := `
+func (p *postgresDb) GetPlayersByRealmID(realmID int) ([]Player, error) {
+	getPlayers := `
 		SELECT *
-		FROM realm
-		WHERE name=$1
+		FROM player
+		WHERE realm_id=$1
 	`
 
+	var players []Player
+	if err := p.db.Select(&players, getPlayers, realmID); err != nil {
+		log.WithError(err).Error("Failed to fetch players by realm ID")
+		return nil, err
+	}
+
+	return players, nil
+}
+
+// GetRealmByField should only be used with fields that are unique ids, i.e. name and id
+func (p *postgresDb) GetRealmByField(field string, val interface{}) (*Realm, error) {
+	q := fmt.Sprintf(`
+		SELECT *
+		FROM realm
+		WHERE %s=$1
+	`, field)
+
 	var realm Realm
-	if err := p.db.Get(&realm, q, name); err != nil {
-		log.WithError(err).Error("Failed to fetch realm by name")
+	if err := p.db.Get(&realm, q, val); err != nil {
+		log.WithError(err).Errorf("Failed to fetch realm by %s", field)
 		return nil, err
 	}
 
