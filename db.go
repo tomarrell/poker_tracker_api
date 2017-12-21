@@ -215,6 +215,7 @@ func (p *postgresDb) GetPlayersByRealmID(realmID int) ([]Player, error) {
 	return players, nil
 }
 
+// GetRealmByField should only be used with fields that are unique ids, i.e. name and id
 func (p *postgresDb) GetRealmByField(field string, val interface{}) (*Realm, error) {
 	q := fmt.Sprintf(`
 		SELECT *
