@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"gopkg.in/guregu/null.v3"
@@ -64,79 +65,89 @@ func (p *postgresDb) Close() {
 }
 
 // CreateRealm method
-func (p *postgresDb) CreateRealm(name null.String, title null.String) (int, error) {
+func (p *postgresDb) CreateRealm(name null.String, title null.String) (*Realm, error) {
 	insertRealm := `
 		INSERT INTO realm (name, title)
 		VALUES ($1, $2)
-		RETURNING id
+		RETURNING id, name, title, created_at
 	`
 
-	var realmID int
-	err := p.db.QueryRow(insertRealm, name, title).Scan(&realmID)
-
-	if err != nil {
-		fmt.Println("Failed to create new realm:", err.Error())
-		return 0, err
+	var realm Realm
+	if err := p.db.Get(&realm, insertRealm, name, title); err != nil {
+		log.WithError(err).Error("Failed to create new realm:", err.Error())
+		return nil, err
 	}
 
-	fmt.Printf("Successfully created new realm id=%d name=\"%s\"\n", realmID, name.String)
-	return realmID, nil
+	log.Infof(`Successfully created new realm id=%d name="%s"`, realm.ID, name.String)
+	return &realm, nil
 }
 
 // CreatePlayer method
-func (p *postgresDb) CreatePlayer(name null.String, realmID null.Int) (int, error) {
+func (p *postgresDb) CreatePlayer(name null.String, realmID null.Int) (*Player, error) {
 	insertPlayer := `
 		INSERT INTO player (name, realm_id)
 		VALUES ($1, $2)
-		RETURNING id
+		RETURNING id, name, realm_id
 	`
-
-	var playerID int
-	err := p.db.QueryRow(insertPlayer, name, realmID).Scan(&playerID)
+	var player Player
+	err := p.db.Get(&player, insertPlayer, name, realmID)
 
 	if err != nil {
-		fmt.Println("Failed to create new player")
-		return 0, err
+		log.WithError(err).Error("Failed to create new player")
+		return nil, err
 	}
 
-	fmt.Printf("Successfully created new player id=%d name=\"%s\"\n", playerID, name.String)
-	return playerID, nil
+	fmt.Printf("Successfully created new player id=%d name=\"%s\"\n", player.ID, name.String)
+	return &player, nil
 }
 
 // CreateSession handles creating the session row and creating player_session records
-func (p *postgresDb) CreateSession(realmID null.Int, name null.String, time null.Time, playerSessions []PlayerSession) (int, error) {
+func (p *postgresDb) CreateSession(realmID null.Int, name null.String, time null.Time, playerSessions []PlayerSession) (*Session, error) {
 	insertSession := `
 		INSERT INTO session (realm_id, name, time)
 		VALUES ($1, $2, $3)
-		RETURNING id
+		RETURNING id, realm_id, name, time
 	`
 	mapPlayerToSession := `
 		INSERT INTO player_session (player_id, session_id, buyin, walkout)
 		VALUES ($1, $2, $3, $4)
 	`
 
-	var sessionID int
+	insertTransferForPlayer := `
+		INSERT INTO transfer (player_id, amount, session_id, reason)
+		VALUES($1, $2, $3, $4)
+	`
+
+	var session Session
 
 	// Begin transaction
 	tx := p.db.MustBegin()
-	tx.QueryRow(insertSession, realmID, name, time).Scan(&sessionID)
+	if err := tx.Get(&session, insertSession, realmID, name, time); err != nil {
+		tx.Rollback()
+		return nil, err
+	}
 
 	for _, player := range playerSessions {
-		_, err := tx.Exec(mapPlayerToSession, player.PlayerID, sessionID, player.Buyin, player.Walkout)
-		if err != nil {
+		if _, err := tx.Exec(mapPlayerToSession, player.PlayerID, session.ID, player.Buyin, player.Walkout); err != nil {
 			tx.Rollback()
-			return 0, err
+			return nil, err
+		}
+		var amount = player.Walkout.Int64 - player.Buyin.Int64
+		if _, err := tx.Exec(insertTransferForPlayer, player.PlayerID, amount, session.ID, "Session Participation"); err != nil {
+			tx.Rollback()
+			return nil, err
 		}
 	}
+
 	err := tx.Commit()
 
 	if err != nil {
-		fmt.Println("Failed to create new player")
-		return 0, err
+		log.WithError(err).Error("Failed to record new session")
+		return nil, err
 	}
 
-	fmt.Printf("Successfully created new session id=%d name=\"%s\" time=\"%s\"\n", sessionID, name.String, time.Time)
-	return sessionID, nil
+	log.Infof(`Successfully created new session id=%d name="%s" time="%s"`, session.ID, session.Name.String, session.Time.String())
+	return &session, nil
 }
 
 // GetSessions returns an array of sessions given a realmID
@@ -148,18 +159,15 @@ func (p *postgresDb) GetSessions(realmID int) ([]Session, error) {
 	`
 
 	var sessions []Session
-
-	err := p.db.Select(&sessions, getSessions, realmID)
-
-	if err != nil {
-		fmt.Println("Failed to fetch sessions of realm")
-		return []Session{}, err
+	if err := p.db.Select(&sessions, getSessions, realmID); err != nil {
+		log.WithError(err).Error("Failed to fetch sessions of realm")
+		return nil, err
 	}
 
 	return sessions, nil
 }
 
-func (p *postgresDb) GetSessionById(id int) (*Session, error) {
+func (p *postgresDb) GetSessionByID(id int) (*Session, error) {
 	getSessions := `
 		SELECT *
 		FROM session
@@ -167,17 +175,15 @@ func (p *postgresDb) GetSessionById(id int) (*Session, error) {
 	`
 
 	var session Session
-
-	err := p.db.Get(&session, getSessions, id)
-
-	if err != nil {
+	if err := p.db.Get(&session, getSessions, id); err != nil {
+		log.WithError(err).Error("Failed to fetch sessions by ID")
 		return nil, err
 	}
 
 	return &session, nil
 }
 
-func (p *postgresDb) GetPlayerById(id int) (*Player, error) {
+func (p *postgresDb) GetPlayerByID(id int) (*Player, error) {
 	getPlayers := `
 		SELECT *
 		FROM player
@@ -185,10 +191,8 @@ func (p *postgresDb) GetPlayerById(id int) (*Player, error) {
 	`
 
 	var player Player
-
-	err := p.db.Get(&player, getPlayers, id)
-
-	if err != nil {
+	if err := p.db.Get(&player, getPlayers, id); err != nil {
+		log.WithError(err).Error("Failed to fetch player by ID")
 		return nil, err
 	}
 
@@ -201,9 +205,10 @@ func (p *postgresDb) GetRealmByName(name string) (*Realm, error) {
 		FROM realm
 		WHERE name=$1
 	`
+
 	var realm Realm
-	err := p.db.Get(&realm, q, name)
-	if err != nil {
+	if err := p.db.Get(&realm, q, name); err != nil {
+		log.WithError(err).Error("Failed to fetch realm by name")
 		return nil, err
 	}
 
