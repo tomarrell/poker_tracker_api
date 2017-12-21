@@ -18,6 +18,8 @@
 # [[override]]
 #  name = "github.com/x/y"
 #  version = "2.4.0"
+[metadata.heroku]
+  root-package = "github.com/jackyzhen/poker_tracker_api"
 
 [[constraint]]
   branch = "master"
