@@ -20,7 +20,7 @@ func main() {
 	http.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write(page)
 	}))
-	http.Handle("/graphql", &relay.Handler{Schema: schema})
+	http.Handle("/graphql", cors(&relay.Handler{Schema: schema}))
 
 	// heroku defines an ENV var that is the port that should be exposed
 	port := os.Getenv("PORT")
