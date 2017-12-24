@@ -21,6 +21,7 @@ schema {
 		createRealm(name: String!, title: String): Realm
 		createPlayer(name: String!, realmId: ID!): Player
 		createSession(name: String!, realmId: ID!, time: String!, playerSessions: [CreateSessionPlayerSession]!): Session
+		updateSession(sessionId:ID!, name: String!, realmId: ID!, time: String!, playerSessions: [UpdateSessionPlayerSession]!): Session
 	}
 
 	type Player {
@@ -52,6 +53,13 @@ schema {
 	}
 
 	input CreateSessionPlayerSession {
+		playerId: ID!
+		buyin: Int!
+		walkout: Int!
+	}
+
+	input UpdateSessionPlayerSession {
+		sessionID: ID!
 		playerId: ID!
 		buyin: Int!
 		walkout: Int!

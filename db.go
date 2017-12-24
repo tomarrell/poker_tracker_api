@@ -1,13 +1,14 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
-	"gopkg.in/guregu/null.v3"
+	null "gopkg.in/guregu/null.v3"
 )
 
 // Realm DB table
@@ -147,6 +148,79 @@ func (p *postgresDb) CreateSession(realmID null.Int, name null.String, time null
 	}
 
 	log.Infof(`Successfully created new session id=%d name="%s" time="%s"`, session.ID, session.Name.String, session.Time.String())
+	return &session, nil
+}
+
+// CreateSession handles creating the session row and creating player_session records
+func (p *postgresDb) UpdateSession(realmID null.Int, name null.String, time null.Time, playerSessions []PlayerSession) (*Session, error) {
+	updateSession := `
+		UPDATE session
+		SET realm_id = $1, name = $2, time = $3
+		RETURNING id, realm_id, name, time
+	`
+
+	getPlayerSession := `
+		SELECT session_id, player_id, buyin, walkout
+		FROM player_session
+		WHERE session_id = $1 AND player_id = $2
+	`
+
+	upsertPlayerSession := `
+		INSERT INTO player_session (player_id, session_id, buyin, walkout)
+		VALUES ($1, $2, $3, $4)
+		ON CONFLICT (player_id, session_id) DO UPDATE
+		SET buyin = $3, walkout = $4
+	`
+
+	insertTransferForPlayer := `
+		INSERT INTO transfer (player_id, amount, session_id, reason)
+		VALUES($1, $2, $3, $4)
+	`
+
+	var session Session
+
+	// Begin transaction
+	tx := p.db.MustBegin()
+	if err := tx.Get(&session, updateSession, realmID, name, time); err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	for _, player := range playerSessions {
+		var transferAmount = player.Walkout.Int64 - player.Buyin.Int64
+		var existingPlayerSession PlayerSession
+		var err error
+		if err := tx.Get(&existingPlayerSession, getPlayerSession, session.ID, player.PlayerID); err != nil && err != sql.ErrNoRows {
+			tx.Rollback()
+			return nil, err
+		}
+		// If we got a result, make sure to set a transfer amount as an adjustment of the previous session
+		if err == nil {
+			var oldTransferAmount = existingPlayerSession.Walkout.Int64 - existingPlayerSession.Buyin.Int64
+			transferAmount = transferAmount - oldTransferAmount
+		}
+
+		if _, err := tx.Exec(upsertPlayerSession, player.PlayerID, session.ID, player.Buyin, player.Walkout); err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+
+		if _, err := tx.Exec(insertTransferForPlayer, player.PlayerID, transferAmount, session.ID, "Session Participation"); err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+	}
+
+	err := tx.Commit()
+	if err != nil && err == sql.ErrNoRows {
+
+	}
+	if err != nil {
+		log.WithError(err).Error("Failed to record update session")
+		return nil, err
+	}
+
+	log.Infof(`Successfully updated session id=%d name="%s" time="%s"`, session.ID, session.Name.String, session.Time.String())
 	return &session, nil
 }
 
