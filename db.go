@@ -44,6 +44,16 @@ type PlayerSession struct {
 	CreatedAt time.Time `db:"created_at"`
 }
 
+// Transfer DB table
+type Transfer struct {
+	ID        int         `db:"id"`
+	PlayerID  int         `db:"player_id"`
+	Amount    int         `db:"amount"`
+	SessionID null.Int    `db:"session_id"`
+	Reason    null.String `db:"reason"`
+	CreatedAt time.Time   `db:"created_at"`
+}
+
 type postgresDb struct {
 	db *sqlx.DB
 }

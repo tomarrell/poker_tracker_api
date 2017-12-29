@@ -40,10 +40,29 @@ git push heroku [your-branch-name-here]:master
 6. Navigate to `localhost:8080/` to view graphql interface
 
 ### Goose migration command
-For heroku, see the dsn defined in heroku.config.yaml, EG: ```goose postgres "dbname=d37n08r6dnuggm host=ec2-54-163-233-103.compute-1.amazonaws.com port=5432 user=ugkwkagwazrgyq password=4daf38121a11e00ef4afe12565e3858b6e20e4519e752ad1bba487d5dda3b681"```
+For heroku, see the dsn defined in heroku.config.yaml, EG:
+```
+goose postgres "dbname=d37n08r6dnuggm host=ec2-54-163-233-103.compute-1.amazonaws.com port=5432 user=ugkwkagwazrgyq password=4daf38121a11e00ef4afe12565e3858b6e20e4519e752ad1bba487d5dda3b681"
+```
 
+For local after running docker-compose:
+```
+goose postgres "host=localhost user=postgres dbname=pokerapi password=crimsonsux sslmode=disable" up
+```
 
-For local after running docker-compose: `goose postgres "host=localhost user=postgres dbname=pokerapi password=crimsonsux sslmode=disable" up`
+### Tests
+
+Running all tests:
+```
+docker-compose up -d
+go test -v
+```
+
+Run short without integration tests:
+```
+go test -v --short
+```
+
 
 ## Todo:
 See active [Issues](https://github.com/tomarrell/poker_tracker_api/issues) 
