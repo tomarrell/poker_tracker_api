@@ -20,7 +20,7 @@ func (r *Resolver) RealmByName(args struct{ Name string }) (*RealmResolver, erro
 	}
 
 	return &RealmResolver{
-		id:    graphql.ID(strconv.Itoa(realm.ID)),
+		id:    toGQL(realm.ID),
 		name:  realm.Name,
 		title: realm.Title.Ptr(),
 		db:    r.db}, nil
@@ -37,7 +37,7 @@ func (r *Resolver) RealmByID(args struct{ ID graphql.ID }) (*RealmResolver, erro
 	}
 
 	return &RealmResolver{
-		id:    graphql.ID(strconv.Itoa(realm.ID)),
+		id:    toGQL(realm.ID),
 		name:  realm.Name,
 		title: realm.Title.Ptr(),
 		db:    r.db}, nil
@@ -59,7 +59,7 @@ func (r *RealmResolver) Players() ([]*PlayerResolver, error) {
 	for _, p := range players {
 		pr = append(pr,
 			&PlayerResolver{
-				id:      graphql.ID(strconv.Itoa(p.ID)),
+				id:      toGQL(p.ID),
 				realmID: graphql.ID(strconv.Itoa(p.RealmID)),
 				name:    p.Name,
 			},
@@ -85,8 +85,8 @@ func (r *RealmResolver) Sessions() ([]*SessionResolver, error) {
 	for _, s := range sessions {
 		sr = append(sr,
 			&SessionResolver{
-				id:      graphql.ID(strconv.Itoa(s.ID)),
-				realmID: graphql.ID(strconv.Itoa(s.RealmID)),
+				id:      toGQL(s.ID),
+				realmID: toGQL(s.RealmID),
 				name:    s.Name.Ptr(),
 				time:    s.Time.UTC().Format(time.RFC3339),
 			},
@@ -113,8 +113,8 @@ func (r *Resolver) PlayerByID(args struct{ ID graphql.ID }) (*PlayerResolver, er
 	}
 
 	return &PlayerResolver{
-		id:      graphql.ID(strconv.Itoa(player.ID)),
-		realmID: graphql.ID(strconv.Itoa(player.RealmID)),
+		id:      toGQL(player.ID),
+		realmID: toGQL(player.RealmID),
 		name:    player.Name,
 	}, nil
 }
@@ -136,8 +136,8 @@ func (r *Resolver) SessionByID(args struct{ ID graphql.ID }) (*SessionResolver, 
 	}
 
 	return &SessionResolver{
-		id:      graphql.ID(strconv.Itoa(session.ID)),
-		realmID: graphql.ID(strconv.Itoa(session.RealmID)),
+		id:      toGQL(session.ID),
+		realmID: toGQL(session.RealmID),
 		name:    session.Name.Ptr(),
 		time:    session.Time.UTC().Format(time.RFC3339),
 	}, nil
@@ -164,8 +164,8 @@ func (r *Resolver) SessionsByRealmID(args struct{ RealmID graphql.ID }) (*[]*Ses
 	for _, s := range sessions {
 		sr = append(sr,
 			&SessionResolver{
-				id:      graphql.ID(strconv.Itoa(s.ID)),
-				realmID: graphql.ID(strconv.Itoa(s.RealmID)),
+				id:      toGQL(s.ID),
+				realmID: toGQL(s.RealmID),
 				name:    s.Name.Ptr(),
 				time:    s.Time.UTC().Format(time.RFC3339),
 			},

@@ -2,10 +2,8 @@ package main
 
 import (
 	"errors"
-	"strconv"
 	"time"
 
-	graphql "github.com/neelance/graphql-go"
 	"gopkg.in/guregu/null.v3"
 )
 
@@ -21,13 +19,13 @@ func (r *Resolver) CreateRealm(args CreateRealm) (*RealmResolver, error) {
 		return nil, errors.New("Must supply realm name")
 	}
 
-	realm, err := r.db.CreateRealm(null.StringFrom(args.Name), null.StringFromPtr(args.Title))
+	realm, err := r.db.CreateRealm(args.Name, args.Title)
 	if err != nil {
 		return nil, err
 	}
 
 	return &RealmResolver{
-		id:    graphql.ID(strconv.Itoa(realm.ID)),
+		id:    toGQL(realm.ID),
 		name:  realm.Name,
 		title: realm.Title.Ptr(),
 		db:    r.db}, nil
@@ -49,16 +47,16 @@ func (r *Resolver) CreatePlayer(args CreatePlayer) (*PlayerResolver, error) {
 	}
 
 	// TODO: Check if realm exists first to provide nicer error?
-	player, err := r.db.CreatePlayer(null.StringFrom(args.Name), null.IntFrom(int64(args.RealmID)))
+	player, err := r.db.CreatePlayer(args.Name, args.RealmID)
 
 	if err != nil {
 		return nil, err
 	}
 
 	return &PlayerResolver{
-		id:      graphql.ID(strconv.Itoa(player.ID)),
+		id:      toGQL(player.ID),
 		name:    player.Name,
-		realmID: graphql.ID(strconv.Itoa(player.RealmID)),
+		realmID: toGQL(player.RealmID),
 	}, nil
 }
 
@@ -81,9 +79,13 @@ type CreateSession struct {
 func (r *Resolver) CreateSession(args CreateSession) (*SessionResolver, error) {
 	// TODO: Argument validation
 
-	parsedTime, err := time.Parse(time.RFC3339, args.Time)
-	if err != nil {
-		return nil, err
+	var t *time.Time
+	if args.Time != "" {
+		parsedTime, err := time.Parse(time.RFC3339, args.Time)
+		if err != nil {
+			return nil, err
+		}
+		t = &parsedTime
 	}
 
 	var playerSessions = make([]PlayerSession, len(args.PlayerSessions))
@@ -96,18 +98,18 @@ func (r *Resolver) CreateSession(args CreateSession) (*SessionResolver, error) {
 	}
 
 	session, err := r.db.CreateSession(
-		null.IntFrom(int64(args.RealmID)),
-		null.StringFrom(args.Name),
-		null.TimeFrom(parsedTime),
+		args.RealmID,
+		args.Name,
+		t,
 		playerSessions)
 
 	if err != nil {
 		return nil, err
 	}
 	return &SessionResolver{
-		id:      graphql.ID(strconv.Itoa(session.ID)),
+		id:      toGQL(session.ID),
 		name:    session.Name.Ptr(),
-		realmID: graphql.ID(strconv.Itoa(session.RealmID)),
+		realmID: toGQL(session.RealmID),
 		time:    session.Time.Format(time.RFC3339),
 	}, nil
 }

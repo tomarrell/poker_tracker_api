@@ -27,49 +27,49 @@ type dbTestSuite struct {
 }
 
 func (s *dbTestSuite) Test_CreateRealm() {
-	realmName := null.StringFrom("crimson")
-	realmTitle := null.StringFrom("sux")
-	r, err := s.p.CreateRealm(realmName, realmTitle)
+	realmName := "crimson"
+	realmTitle := "sux"
+	r, err := s.p.CreateRealm(realmName, &realmTitle)
 	s.Require().NotNil(r)
 	s.Require().NoError(err)
-	s.Require().Equal(realmName.String, r.Name)
-	s.Require().Equal(realmTitle, r.Title)
+	s.Require().Equal(realmName, r.Name)
+	s.Require().Equal(realmTitle, r.Title.String)
 	s.Require().NotZero(r.ID)
 
 	var testRealm Realm
 	s.Require().NoError(s.p.db.Get(&testRealm, fmt.Sprintf("SELECT * from realm where id = %d", r.ID)))
-	s.Require().Equal(realmName.String, testRealm.Name)
-	s.Require().Equal(realmTitle, testRealm.Title)
+	s.Require().Equal(realmName, testRealm.Name)
+	s.Require().Equal(realmTitle, testRealm.Title.String)
 	s.Require().Equal(r.ID, testRealm.ID)
 }
 
 func (s *dbTestSuite) Test_CreatePlayer() {
-	r, _ := s.p.CreateRealm(null.StringFrom("testName"), null.StringFrom("testTitle"))
+	r, _ := s.p.CreateRealm("testName", &[]string{"testTitle"}[0])
 	s.Require().NotZero(r.ID)
-	playerName := null.StringFrom("crimson")
-	realmID := null.IntFrom(int64(r.ID))
+	playerName := "crimson"
+	realmID := int32(r.ID)
 	p, err := s.p.CreatePlayer(playerName, realmID)
 	s.Require().NotNil(p)
 	s.Require().NoError(err)
-	s.Require().Equal(playerName.String, p.Name)
-	s.Require().Equal(realmID.Int64, int64(p.RealmID))
+	s.Require().Equal(playerName, p.Name)
+	s.Require().Equal(realmID, int32(p.RealmID))
 	s.Require().NotZero(p.ID)
 
 	var testPlayer Player
 	s.Require().NoError(s.p.db.Get(&testPlayer, fmt.Sprintf("SELECT * from player where id = %d", p.ID)))
-	s.Require().Equal(playerName.String, testPlayer.Name)
-	s.Require().Equal(realmID.Int64, int64(p.RealmID))
+	s.Require().Equal(playerName, testPlayer.Name)
+	s.Require().Equal(realmID, int32(p.RealmID))
 	s.Require().Equal(p.ID, testPlayer.ID)
 }
 
 func (s *dbTestSuite) Test_CreateSession() {
-	r, _ := s.p.CreateRealm(null.StringFrom("testName"), null.StringFrom("testTitle"))
+	r, _ := s.p.CreateRealm("testName", &[]string{"testTitle"}[0])
 	s.Require().NotZero(r.ID)
-	realmID := null.IntFrom(int64(r.ID))
-	sessionName := null.StringFrom("christmas poker night 2017")
-	p1, _ := s.p.CreatePlayer(null.StringFrom("p1"), realmID)
-	p2, _ := s.p.CreatePlayer(null.StringFrom("p2"), realmID)
-	p3, _ := s.p.CreatePlayer(null.StringFrom("p3"), realmID)
+	realmID := int32(r.ID)
+	sessionName := "christmas poker night 2017"
+	p1, _ := s.p.CreatePlayer("p1", realmID)
+	p2, _ := s.p.CreatePlayer("p2", realmID)
+	p3, _ := s.p.CreatePlayer("p3", realmID)
 	playerSessions := []PlayerSession{
 		PlayerSession{
 			PlayerID: p1.ID,
@@ -87,14 +87,14 @@ func (s *dbTestSuite) Test_CreateSession() {
 			Walkout:  null.IntFrom(1),
 		},
 	}
-	now := null.TimeFrom(time.Now())
-	ps, err := s.p.CreateSession(realmID, sessionName, now, playerSessions)
+	now := time.Now()
+	ps, err := s.p.CreateSession(realmID, sessionName, &now, playerSessions)
 	s.Require().NotNil(ps)
 	s.Require().NoError(err)
 	s.Require().NotZero(ps.ID)
-	s.Require().Equal(sessionName, ps.Name)
-	s.Require().Equal(now.Time.Unix(), ps.Time.Unix())
-	s.Require().Equal(realmID.Int64, int64(ps.RealmID))
+	s.Require().Equal(sessionName, ps.Name.String)
+	s.Require().Equal(now.Unix(), ps.Time.Unix())
+	s.Require().Equal(realmID, int32(ps.RealmID))
 
 	dbPS := PlayerSession{}
 	rows, err := s.p.db.Queryx("SELECT * FROM player_session where session_id = $1 order by player_id", ps.ID)

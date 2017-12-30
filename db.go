@@ -75,7 +75,7 @@ func (p *postgresDb) Close() {
 }
 
 // CreateRealm method
-func (p *postgresDb) CreateRealm(name null.String, title null.String) (*Realm, error) {
+func (p *postgresDb) CreateRealm(name string, title *string) (*Realm, error) {
 	insertRealm := `
 		INSERT INTO realm (name, title)
 		VALUES ($1, $2)
@@ -88,12 +88,12 @@ func (p *postgresDb) CreateRealm(name null.String, title null.String) (*Realm, e
 		return nil, err
 	}
 
-	log.Infof(`Successfully created new realm id=%d name="%s"`, realm.ID, name.String)
+	log.Debugf(`Successfully created new realm id=%d name="%s"`, realm.ID, name)
 	return &realm, nil
 }
 
 // CreatePlayer method
-func (p *postgresDb) CreatePlayer(name null.String, realmID null.Int) (*Player, error) {
+func (p *postgresDb) CreatePlayer(name string, realmID int32) (*Player, error) {
 	insertPlayer := `
 		INSERT INTO player (name, realm_id)
 		VALUES ($1, $2)
@@ -107,12 +107,12 @@ func (p *postgresDb) CreatePlayer(name null.String, realmID null.Int) (*Player, 
 		return nil, err
 	}
 
-	fmt.Printf("Successfully created new player id=%d name=\"%s\"\n", player.ID, name.String)
+	log.Debugf("Successfully created new player id=%d name=\"%s\"\n", player.ID, name)
 	return &player, nil
 }
 
 // CreateSession handles creating the session row and creating player_session records
-func (p *postgresDb) CreateSession(realmID null.Int, name null.String, time null.Time, playerSessions []PlayerSession) (*Session, error) {
+func (p *postgresDb) CreateSession(realmID int32, name string, t *time.Time, playerSessions []PlayerSession) (*Session, error) {
 	insertSession := `
 		INSERT INTO session (realm_id, name, time)
 		VALUES ($1, $2, $3)
@@ -132,7 +132,7 @@ func (p *postgresDb) CreateSession(realmID null.Int, name null.String, time null
 
 	// Begin transaction
 	tx := p.db.MustBegin()
-	if err := tx.Get(&session, insertSession, realmID, name, time); err != nil {
+	if err := tx.Get(&session, insertSession, realmID, name, t); err != nil {
 		tx.Rollback()
 		return nil, err
 	}
@@ -156,7 +156,7 @@ func (p *postgresDb) CreateSession(realmID null.Int, name null.String, time null
 		return nil, err
 	}
 
-	log.Infof(`Successfully created new session id=%d name="%s" time="%s"`, session.ID, session.Name.String, session.Time.String())
+	log.Debugf(`Successfully created new session id=%d name="%s" time="%s"`, session.ID, session.Name, session.Time.String())
 	return &session, nil
 }
 
