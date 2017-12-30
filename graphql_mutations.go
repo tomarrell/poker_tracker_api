@@ -26,11 +26,11 @@ func (r *Resolver) CreateRealm(args CreateRealm) (*RealmResolver, error) {
 		return nil, err
 	}
 
-	return &RealmResolver{&GQLRealm{
-		ID:    graphql.ID(strconv.Itoa(realm.ID)),
-		Name:  realm.Name,
-		Title: realm.Title.Ptr(),
-	}, r.db}, nil
+	return &RealmResolver{
+		id:    graphql.ID(strconv.Itoa(realm.ID)),
+		name:  realm.Name,
+		title: realm.Title.Ptr(),
+		db:    r.db}, nil
 }
 
 // CreatePlayer args struct
@@ -55,11 +55,11 @@ func (r *Resolver) CreatePlayer(args CreatePlayer) (*PlayerResolver, error) {
 		return nil, err
 	}
 
-	return &PlayerResolver{&GQLPlayer{
-		ID:      graphql.ID(strconv.Itoa(player.ID)),
-		Name:    player.Name,
-		RealmID: graphql.ID(strconv.Itoa(player.RealmID)),
-	}}, nil
+	return &PlayerResolver{
+		id:      graphql.ID(strconv.Itoa(player.ID)),
+		name:    player.Name,
+		realmID: graphql.ID(strconv.Itoa(player.RealmID)),
+	}, nil
 }
 
 // CreateSessionPlayerSession args struct
@@ -104,10 +104,10 @@ func (r *Resolver) CreateSession(args CreateSession) (*SessionResolver, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &SessionResolver{&GQLSession{
-		ID:      graphql.ID(strconv.Itoa(session.ID)),
-		Name:    session.Name.Ptr(),
-		RealmID: graphql.ID(strconv.Itoa(session.RealmID)),
-		Time:    session.Time.Format(time.RFC3339),
-	}}, nil
+	return &SessionResolver{
+		id:      graphql.ID(strconv.Itoa(session.ID)),
+		name:    session.Name.Ptr(),
+		realmID: graphql.ID(strconv.Itoa(session.RealmID)),
+		time:    session.Time.Format(time.RFC3339),
+	}, nil
 }

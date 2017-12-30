@@ -4,36 +4,6 @@ import (
 	graphql "github.com/neelance/graphql-go"
 )
 
-// GQLRealm struct
-type GQLRealm struct {
-	ID    graphql.ID
-	Name  string
-	Title *string
-}
-
-// GQLPlayer struct
-type GQLPlayer struct {
-	ID      graphql.ID
-	RealmID graphql.ID
-	Name    string
-}
-
-// GQLSession struct
-type GQLSession struct {
-	ID      graphql.ID
-	RealmID graphql.ID
-	Name    *string
-	Time    string
-}
-
-// GQLPlayerSession struct
-type GQLPlayerSession struct {
-	PlayerID  graphql.ID
-	SessionID graphql.ID
-	BuyIn     int
-	Walkout   int
-}
-
 // Resolver struct
 type Resolver struct {
 	db *postgresDb
@@ -44,23 +14,25 @@ type Resolver struct {
 
 // RealmResolver struct
 type RealmResolver struct {
-	r  *GQLRealm
-	db *postgresDb
+	id    graphql.ID
+	name  string
+	title *string
+	db    *postgresDb
 }
 
 // ID getter
 func (r *RealmResolver) ID() graphql.ID {
-	return r.r.ID
+	return r.id
 }
 
 // Name getter
 func (r *RealmResolver) Name() string {
-	return r.r.Name
+	return r.name
 }
 
 // Title getter
 func (r *RealmResolver) Title() *string {
-	return r.r.Title
+	return r.title
 }
 
 //     PLAYER
@@ -68,22 +40,24 @@ func (r *RealmResolver) Title() *string {
 
 // PlayerResolver struct
 type PlayerResolver struct {
-	p *GQLPlayer
+	id      graphql.ID
+	realmID graphql.ID
+	name    string
 }
 
 // ID getter
 func (p *PlayerResolver) ID() graphql.ID {
-	return p.p.ID
+	return p.id
 }
 
 // Name getter
 func (p *PlayerResolver) Name() string {
-	return p.p.Name
+	return p.name
 }
 
 // RealmID getter
 func (p *PlayerResolver) RealmID() graphql.ID {
-	return p.p.RealmID
+	return p.realmID
 }
 
 //     SESSION
@@ -91,28 +65,31 @@ func (p *PlayerResolver) RealmID() graphql.ID {
 
 // SessionResolver struct
 type SessionResolver struct {
-	s *GQLSession
+	id      graphql.ID
+	realmID graphql.ID
+	name    *string
+	time    string
 }
 
 // ID getter
 func (s *SessionResolver) ID() graphql.ID {
-	return s.s.ID
+	return s.id
 }
 
 // Name getter
 func (s *SessionResolver) Name() *string {
-	return s.s.Name
+	return s.name
 
 }
 
 // RealmID getter
 func (s *SessionResolver) RealmID() graphql.ID {
-	return s.s.RealmID
+	return s.realmID
 }
 
 // Time getter
 func (s *SessionResolver) Time() string {
-	return s.s.Time
+	return s.time
 }
 
 //     PLAYER_SESSION
@@ -120,25 +97,28 @@ func (s *SessionResolver) Time() string {
 
 // PlayerSessionResolver struct
 type PlayerSessionResolver struct {
-	ps *GQLPlayerSession
+	playerID  graphql.ID
+	sessionID graphql.ID
+	buyIn     int
+	walkout   int
 }
 
 // PlayerID getter
 func (ps *PlayerSessionResolver) PlayerID() graphql.ID {
-	return ps.ps.PlayerID
+	return ps.playerID
 }
 
 // SessionID getter
 func (ps *PlayerSessionResolver) SessionID() graphql.ID {
-	return ps.ps.SessionID
+	return ps.sessionID
 }
 
 // BuyIn getter
 func (ps *PlayerSessionResolver) BuyIn() int {
-	return ps.ps.BuyIn
+	return ps.buyIn
 }
 
 // WalkOut getter
 func (ps *PlayerSessionResolver) WalkOut() int {
-	return ps.ps.Walkout
+	return ps.walkout
 }
