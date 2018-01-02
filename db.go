@@ -88,7 +88,7 @@ func (p *postgresDb) CreateRealm(name string, title *string) (*Realm, error) {
 		return nil, err
 	}
 
-	log.Debugf(`Successfully created new realm id=%d name="%s"`, realm.ID, name)
+	log.Debugf(`Successfully created new realm id=[%d] name=[%s]`, realm.ID, name)
 	return &realm, nil
 }
 
@@ -107,7 +107,7 @@ func (p *postgresDb) CreatePlayer(name string, realmID int32) (*Player, error) {
 		return nil, err
 	}
 
-	log.Debugf("Successfully created new player id=%d name=\"%s\"\n", player.ID, name)
+	log.Debugf(`Successfully created new player id=[%d] name=[%s]`, player.ID, name)
 	return &player, nil
 }
 
@@ -156,7 +156,7 @@ func (p *postgresDb) CreateSession(realmID int32, name string, t *time.Time, pla
 		return nil, err
 	}
 
-	log.Debugf(`Successfully created new session id=%d name="%s" time="%s"`, session.ID, session.Name, session.Time.String())
+	log.Debugf(`Successfully created new session id=[%d] name=[%s] time=[%s]`, session.ID, session.Name.String, session.Time.String())
 	return &session, nil
 }
 

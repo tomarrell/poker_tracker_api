@@ -9,6 +9,11 @@ import (
 	"github.com/neelance/graphql-go/relay"
 )
 
+func init() {
+	log.SetLevel(log.DebugLevel)
+	log.SetFormatter(&log.JSONFormatter{})
+}
+
 func main() {
 
 	conf := mustParseConfig()
