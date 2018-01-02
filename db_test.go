@@ -15,7 +15,7 @@ import (
 
 const (
 	testDbType  = "postgres"
-	testDSN     = "host=127.0.0.1 port=5432 user=postgres password=crimsonsux sslmode=disable"
+	testDSN     = "host=127.0.0.1 port=5432 user=postgres password=redsux sslmode=disable"
 	createDbSql = "CREATE DATABASE %s ;"
 	dropDbSql   = "DROP DATABASE %s ;"
 )
@@ -27,7 +27,7 @@ type dbTestSuite struct {
 }
 
 func (s *dbTestSuite) Test_CreateRealm() {
-	realmName := "crimson"
+	realmName := "red"
 	realmTitle := "sux"
 	r, err := s.p.CreateRealm(realmName, &realmTitle)
 	s.Require().NotNil(r)
@@ -46,7 +46,7 @@ func (s *dbTestSuite) Test_CreateRealm() {
 func (s *dbTestSuite) Test_CreatePlayer() {
 	r, _ := s.p.CreateRealm("testName", &[]string{"testTitle"}[0])
 	s.Require().NotZero(r.ID)
-	playerName := "crimson"
+	playerName := "red"
 	realmID := int32(r.ID)
 	p, err := s.p.CreatePlayer(playerName, realmID)
 	s.Require().NotNil(p)

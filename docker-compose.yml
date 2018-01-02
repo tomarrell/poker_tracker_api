@@ -5,5 +5,5 @@ postgresdb:
   ports:
     - "5432:5432"
   environment:
-    POSTGRES_PASSWORD: crimsonsux
+    POSTGRES_PASSWORD: redsux
     POSTGRES_DB: pokerapi

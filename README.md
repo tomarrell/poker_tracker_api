@@ -35,19 +35,14 @@ git push heroku [your-branch-name-here]:master
 1. Clone the repository
 2. `dep ensure` to resolve dependencies
 3. Run `docker-compose up` to bring up local postgres db
-4. `cd` into `/migrations` and with https://github.com/pressly/goose run the goose command below, with your DB details inserted to run the migrations and setup your database
+4. Install https://github.com/pressly/goose and run Goose migration command described below.
 5. Run `go install && poker_tracker_api --config=config.yaml` inside the root directory to run the service on port `8080`
 6. Navigate to `localhost:8080/` to view graphql interface
 
 ### Goose migration command
-For heroku, see the dsn defined in heroku.config.yaml, EG:
-```
-goose postgres "dbname=d37n08r6dnuggm host=ec2-54-163-233-103.compute-1.amazonaws.com port=5432 user=ugkwkagwazrgyq password=4daf38121a11e00ef4afe12565e3858b6e20e4519e752ad1bba487d5dda3b681"
-```
-
 For local after running docker-compose:
 ```
-goose postgres "host=localhost user=postgres dbname=pokerapi password=crimsonsux sslmode=disable" up
+goose --dir migrations postgres "host=localhost user=postgres dbname=pokerapi password=redsux sslmode=disable" up
 ```
 
 ### Tests
