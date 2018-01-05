@@ -16,8 +16,17 @@ func init() {
 
 func main() {
 
+	// heroku defines an ENV var that is the port that should be exposed
+	port := os.Getenv("PORT")
+	// prod dsn is set in heroku via config var
+	dsn := os.Getenv("DATABASE_URL")
+
 	conf := mustParseConfig()
-	db := mustInitDB("postgres", conf.DSN)
+	if dsn == "" {
+		dsn = conf.DSN
+	}
+
+	db := mustInitDB("postgres", dsn)
 	defer db.Close()
 
 	schema := graphql.MustParseSchema(gqlSchema, &Resolver{db})
@@ -26,9 +35,6 @@ func main() {
 		w.Write(page)
 	}))
 	http.Handle("/graphql", cors(&relay.Handler{Schema: schema}))
-
-	// heroku defines an ENV var that is the port that should be exposed
-	port := os.Getenv("PORT")
 
 	listenAddress := ":" + port
 	if port == "" {
