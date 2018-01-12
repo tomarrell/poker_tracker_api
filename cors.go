@@ -21,8 +21,8 @@ var allowedHeaders = []string{"Origin", "Accept", "Content-Type", "Authorization
 // Allows all methods and all headers
 func cors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		origin := r.Header.Get("Origin")
 		if r.Method == "OPTIONS" {
-			origin := r.Header.Get("Origin")
 			if origin == "" {
 				w.WriteHeader(http.StatusBadRequest)
 				log.Error("Origin needed for preflight")
@@ -37,6 +37,9 @@ func cors(next http.Handler) http.Handler {
 
 			w.WriteHeader(http.StatusOK)
 		} else {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, post-check=0, pre-check=0")
+			w.Header().Set("Access-Control-Expose-Headers", strings.Join(allowedHeaders, ", "))
 			next.ServeHTTP(w, r)
 		}
 	})
