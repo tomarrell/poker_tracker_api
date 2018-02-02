@@ -111,8 +111,22 @@ func (p *postgresDb) CreatePlayer(name string, realmID int32) (*Player, error) {
 	return &player, nil
 }
 
-// CreateSession handles creating the session row and creating player_session records
-func (p *postgresDb) CreateSession(realmID int32, name string, t *time.Time, playerSessions []PlayerSession) (*Session, error) {
+// CreateSession handles creating or updating the session row and player_session records
+// It follows put semantics
+
+func (p *postgresDb) CreateOrUpdateSession(sessionID *int32, realmID int32, name string, t *time.Time, playerSessions []PlayerSession) (*Session, error) {
+
+	deletePlayerSessions := `
+	DELETE FROM player_session WHERE session_id = $1
+	`
+	deletePlayerTransfers := `
+	DELETE FROM transfer WHERE session_id = $1
+	`
+	updateSession := `
+	UPDATE session SET realm_id=$1, name=$2, time=$3 WHERE id=$4
+	RETURNING id, realm_id, name, time
+	`
+
 	insertSession := `
 		INSERT INTO session (realm_id, name, time)
 		VALUES ($1, $2, $3)
@@ -132,9 +146,25 @@ func (p *postgresDb) CreateSession(realmID int32, name string, t *time.Time, pla
 
 	// Begin transaction
 	tx := p.db.MustBegin()
-	if err := tx.Get(&session, insertSession, realmID, name, t); err != nil {
-		tx.Rollback()
-		return nil, err
+
+	if sessionID != nil {
+		if _, err := tx.Exec(deletePlayerSessions, *sessionID); err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+		if _, err := tx.Exec(deletePlayerTransfers, *sessionID); err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+		if err := tx.Get(&session, updateSession, realmID, name, t, *sessionID); err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+	} else {
+		if err := tx.Get(&session, insertSession, realmID, name, t); err != nil {
+			tx.Rollback()
+			return nil, err
+		}
 	}
 
 	for _, player := range playerSessions {
@@ -152,11 +182,11 @@ func (p *postgresDb) CreateSession(realmID int32, name string, t *time.Time, pla
 	err := tx.Commit()
 
 	if err != nil {
-		log.WithError(err).Error("Failed to record new session")
+		log.WithError(err).Error("Failed to record session upsert")
 		return nil, err
 	}
 
-	log.Debugf(`Successfully created new session id=[%d] name=[%s] time=[%s]`, session.ID, session.Name.String, session.Time.String())
+	log.Debugf(`Successfully upsert session id=[%d] name=[%s] time=[%s]`, session.ID, session.Name.String, session.Time.String())
 	return &session, nil
 }
 

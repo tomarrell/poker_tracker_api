@@ -46,7 +46,7 @@ func (r *Resolver) RealmByID(args struct{ ID graphql.ID }) (*RealmResolver, erro
 func (r *RealmResolver) Players() ([]*PlayerResolver, error) {
 	id, err := strconv.Atoi(string(r.ID()))
 	if err != nil {
-		return nil, errors.New("realm id must be numerical")
+		return nil, errors.New("Realm id must be numerical")
 	}
 
 	players, err := r.db.GetPlayersByRealmID(id)

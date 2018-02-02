@@ -62,7 +62,7 @@ func (s *dbTestSuite) Test_CreatePlayer() {
 	s.Require().Equal(p.ID, testPlayer.ID)
 }
 
-func (s *dbTestSuite) Test_CreateSession() {
+func (s *dbTestSuite) Test_CreateUpdateSession() {
 	r, _ := s.p.CreateRealm("testName", &[]string{"testTitle"}[0])
 	s.Require().NotZero(r.ID)
 	realmID := int32(r.ID)
@@ -88,7 +88,7 @@ func (s *dbTestSuite) Test_CreateSession() {
 		},
 	}
 	now := time.Now()
-	ps, err := s.p.CreateSession(realmID, sessionName, &now, playerSessions)
+	ps, err := s.p.CreateOrUpdateSession(nil, realmID, sessionName, &now, playerSessions)
 	s.Require().NotNil(ps)
 	s.Require().NoError(err)
 	s.Require().NotZero(ps.ID)
@@ -111,6 +111,35 @@ func (s *dbTestSuite) Test_CreateSession() {
 	rows, err = s.p.db.Queryx("SELECT * FROM transfer where session_id = $1 order by player_id", ps.ID)
 	s.Require().NoError(err)
 	for i := 0; rows.Next(); i++ {
+		err := rows.StructScan(&t)
+		s.Require().NoError(err)
+		s.Require().EqualValues(playerSessions[i].Walkout.Int64-playerSessions[i].Buyin.Int64, t.Amount)
+	}
+
+	id := int32(ps.ID)
+	ps, err = s.p.CreateOrUpdateSession(&id, realmID, "new"+sessionName, &now, playerSessions[:1])
+	s.Require().NoError(err)
+	s.Require().NotNil(ps)
+	s.Require().NotZero(ps.ID)
+	s.Require().Equal("new"+sessionName, ps.Name.String)
+	s.Require().Equal(now.Unix(), ps.Time.Unix())
+	s.Require().Equal(realmID, int32(ps.RealmID))
+
+	rows, err = s.p.db.Queryx("SELECT * FROM player_session where session_id = $1 order by player_id", ps.ID)
+	s.Require().NoError(err)
+	for i := 0; rows.Next(); i++ {
+		s.Require().True(i < 1)
+		err := rows.StructScan(&dbPS)
+		s.Require().NoError(err)
+		playerSessions[i].CreatedAt = dbPS.CreatedAt
+		playerSessions[i].SessionID = ps.ID
+		s.Require().Equal(playerSessions[i], dbPS)
+	}
+
+	rows, err = s.p.db.Queryx("SELECT * FROM transfer where session_id = $1 order by player_id", ps.ID)
+	s.Require().NoError(err)
+	for i := 0; rows.Next(); i++ {
+		s.Require().True(i < 1)
 		err := rows.StructScan(&t)
 		s.Require().NoError(err)
 		s.Require().EqualValues(playerSessions[i].Walkout.Int64-playerSessions[i].Buyin.Int64, t.Amount)

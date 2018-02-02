@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"gopkg.in/guregu/null.v3"
@@ -73,11 +74,19 @@ type CreateSession struct {
 	RealmID        int32
 	Time           string
 	PlayerSessions []*CreateSessionPlayerSession
+	ID             *int32
 }
 
 // CreateSession mutation
-func (r *Resolver) CreateSession(args CreateSession) (*SessionResolver, error) {
-	// TODO: Argument validation
+func (r *Resolver) PutSession(args CreateSession) (*SessionResolver, error) {
+
+	if args.Name == "" {
+		return nil, errors.New("Session name cannot be empty")
+	}
+
+	if args.RealmID == 0 {
+		return nil, errors.New("Realm id cannot be empty or 0")
+	}
 
 	var t *time.Time
 	if args.Time != "" {
@@ -86,10 +95,32 @@ func (r *Resolver) CreateSession(args CreateSession) (*SessionResolver, error) {
 			return nil, err
 		}
 		t = &parsedTime
+	} else {
+		return nil, errors.New("Time cannot be empty")
 	}
 
-	var playerSessions = make([]PlayerSession, len(args.PlayerSessions))
+	if args.ID != nil {
+		if _, err := r.db.GetSessionByID(int(*args.ID)); err != nil {
+			return nil, fmt.Errorf("Cannot validate existence of session with id %v", *args.ID)
+		}
+	}
+
+	if _, err := r.db.GetRealmByField("id", args.RealmID); err != nil {
+		return nil, fmt.Errorf("Cannot validate existence of realm with id %v", args.RealmID)
+	}
+
+	var (
+		playerSessions = make([]PlayerSession, len(args.PlayerSessions))
+		pids           = make(map[int32]struct{}, len(args.PlayerSessions))
+	)
 	for i, csps := range args.PlayerSessions {
+		if _, ok := pids[csps.PlayerID]; ok {
+			return nil, fmt.Errorf("Duplicate player id %v in playerSessions argument", csps.PlayerID)
+		}
+		if _, err := r.db.GetPlayerByID(int(csps.PlayerID)); err != nil {
+			return nil, fmt.Errorf("Cannot validate existence of player with id %v", csps.PlayerID)
+		}
+		pids[csps.PlayerID] = struct{}{}
 		playerSessions[i] = PlayerSession{
 			PlayerID: int(csps.PlayerID),
 			Buyin:    null.IntFrom(int64(csps.Buyin)),
@@ -97,7 +128,8 @@ func (r *Resolver) CreateSession(args CreateSession) (*SessionResolver, error) {
 		}
 	}
 
-	session, err := r.db.CreateSession(
+	session, err := r.db.CreateOrUpdateSession(
+		args.ID,
 		args.RealmID,
 		args.Name,
 		t,
