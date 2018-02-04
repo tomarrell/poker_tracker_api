@@ -58,6 +58,7 @@ func (r *Resolver) CreatePlayer(args CreatePlayer) (*PlayerResolver, error) {
 		id:      toGQL(player.ID),
 		name:    player.Name,
 		realmID: toGQL(player.RealmID),
+		db:      r.db,
 	}, nil
 }
 
@@ -143,5 +144,5 @@ func (r *Resolver) PutSession(args CreateSession) (*SessionResolver, error) {
 		name:    session.Name.Ptr(),
 		realmID: toGQL(session.RealmID),
 		time:    session.Time.Format(time.RFC3339),
-	}, nil
+		db:      r.db}, nil
 }

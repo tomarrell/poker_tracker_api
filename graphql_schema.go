@@ -27,6 +27,7 @@ schema {
 		id: ID!
 		name: String!
 		realmId: ID!
+		playerSessions: [PlayerSession]!
 	}
 
 	type Realm {
@@ -42,6 +43,7 @@ schema {
 		realmId: ID!
 		name: String
 		time: String!
+		playerSessions: [PlayerSession]!
 	}
 
 	type PlayerSession {

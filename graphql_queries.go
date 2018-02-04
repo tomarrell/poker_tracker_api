@@ -43,59 +43,6 @@ func (r *Resolver) RealmByID(args struct{ ID graphql.ID }) (*RealmResolver, erro
 		db:    r.db}, nil
 }
 
-func (r *RealmResolver) Players() ([]*PlayerResolver, error) {
-	id, err := strconv.Atoi(string(r.ID()))
-	if err != nil {
-		return nil, errors.New("Realm id must be numerical")
-	}
-
-	players, err := r.db.GetPlayersByRealmID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	var pr []*PlayerResolver
-
-	for _, p := range players {
-		pr = append(pr,
-			&PlayerResolver{
-				id:      toGQL(p.ID),
-				realmID: graphql.ID(strconv.Itoa(p.RealmID)),
-				name:    p.Name,
-			},
-		)
-	}
-	return pr, nil
-
-}
-
-func (r *RealmResolver) Sessions() ([]*SessionResolver, error) {
-	id, err := strconv.Atoi(string(r.ID()))
-	if err != nil {
-		return nil, errors.New("realm id must be numerical")
-	}
-
-	sessions, err := r.db.GetSessionsByRealmID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	var sr []*SessionResolver
-
-	for _, s := range sessions {
-		sr = append(sr,
-			&SessionResolver{
-				id:      toGQL(s.ID),
-				realmID: toGQL(s.RealmID),
-				name:    s.Name.Ptr(),
-				time:    s.Time.UTC().Format(time.RFC3339),
-			},
-		)
-	}
-	return sr, nil
-
-}
-
 // PlayerByID resolver
 func (r *Resolver) PlayerByID(args struct{ ID graphql.ID }) (*PlayerResolver, error) {
 	if args.ID == "" {
@@ -116,6 +63,7 @@ func (r *Resolver) PlayerByID(args struct{ ID graphql.ID }) (*PlayerResolver, er
 		id:      toGQL(player.ID),
 		realmID: toGQL(player.RealmID),
 		name:    player.Name,
+		db:      r.db,
 	}, nil
 }
 
@@ -140,7 +88,7 @@ func (r *Resolver) SessionByID(args struct{ ID graphql.ID }) (*SessionResolver, 
 		realmID: toGQL(session.RealmID),
 		name:    session.Name.Ptr(),
 		time:    session.Time.UTC().Format(time.RFC3339),
-	}, nil
+		db:      r.db}, nil
 }
 
 // SessionsByRealmID resolver
@@ -168,6 +116,7 @@ func (r *Resolver) SessionsByRealmID(args struct{ RealmID graphql.ID }) (*[]*Ses
 				realmID: toGQL(s.RealmID),
 				name:    s.Name.Ptr(),
 				time:    s.Time.UTC().Format(time.RFC3339),
+				db:      r.db,
 			},
 		)
 	}

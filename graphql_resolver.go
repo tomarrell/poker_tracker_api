@@ -1,6 +1,10 @@
 package main
 
 import (
+	"errors"
+	"strconv"
+	"time"
+
 	graphql "github.com/neelance/graphql-go"
 )
 
@@ -35,6 +39,61 @@ func (r *RealmResolver) Title() *string {
 	return r.title
 }
 
+func (r *RealmResolver) Players() ([]*PlayerResolver, error) {
+	id, err := strconv.Atoi(string(r.ID()))
+	if err != nil {
+		return nil, errors.New("Realm id must be numerical")
+	}
+
+	players, err := r.db.GetPlayersByRealmID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	var pr []*PlayerResolver
+
+	for _, p := range players {
+		pr = append(pr,
+			&PlayerResolver{
+				id:      toGQL(p.ID),
+				realmID: graphql.ID(strconv.Itoa(p.RealmID)),
+				name:    p.Name,
+				db:      r.db,
+			},
+		)
+	}
+	return pr, nil
+
+}
+
+func (r *RealmResolver) Sessions() ([]*SessionResolver, error) {
+	id, err := strconv.Atoi(string(r.ID()))
+	if err != nil {
+		return nil, errors.New("realm id must be numerical")
+	}
+
+	sessions, err := r.db.GetSessionsByRealmID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	var sr []*SessionResolver
+
+	for _, s := range sessions {
+		sr = append(sr,
+			&SessionResolver{
+				id:      toGQL(s.ID),
+				realmID: toGQL(s.RealmID),
+				name:    s.Name.Ptr(),
+				time:    s.Time.UTC().Format(time.RFC3339),
+				db:      r.db,
+			},
+		)
+	}
+	return sr, nil
+
+}
+
 //     PLAYER
 // ==============
 
@@ -43,6 +102,7 @@ type PlayerResolver struct {
 	id      graphql.ID
 	realmID graphql.ID
 	name    string
+	db      *postgresDb
 }
 
 // ID getter
@@ -60,6 +120,30 @@ func (p *PlayerResolver) RealmID() graphql.ID {
 	return p.realmID
 }
 
+func (p *PlayerResolver) PlayerSessions() ([]*PlayerSessionResolver, error) {
+	id, err := strconv.Atoi(string(p.ID()))
+	if err != nil {
+		return nil, errors.New("player id must be numerical")
+	}
+
+	pSessions, err := p.db.GetPlayerSessionsByField("player_id", id)
+	if err != nil {
+		return nil, err
+	}
+
+	sr := make([]*PlayerSessionResolver, len(pSessions))
+
+	for i, s := range pSessions {
+		sr[i] = &PlayerSessionResolver{
+			playerID:  toGQL(s.PlayerID),
+			sessionID: toGQL(s.SessionID),
+			buyIn:     int32(s.Buyin.Int64),
+			walkout:   int32(s.Walkout.Int64),
+		}
+	}
+	return sr, nil
+}
+
 //     SESSION
 // ===============
 
@@ -69,6 +153,7 @@ type SessionResolver struct {
 	realmID graphql.ID
 	name    *string
 	time    string
+	db      *postgresDb
 }
 
 // ID getter
@@ -92,6 +177,30 @@ func (s *SessionResolver) Time() string {
 	return s.time
 }
 
+func (s *SessionResolver) PlayerSessions() ([]*PlayerSessionResolver, error) {
+	id, err := strconv.Atoi(string(s.ID()))
+	if err != nil {
+		return nil, errors.New("session id must be numerical")
+	}
+
+	pSessions, err := s.db.GetPlayerSessionsByField("session_id", id)
+	if err != nil {
+		return nil, err
+	}
+
+	sr := make([]*PlayerSessionResolver, len(pSessions))
+
+	for i, s := range pSessions {
+		sr[i] = &PlayerSessionResolver{
+			playerID:  toGQL(s.PlayerID),
+			sessionID: toGQL(s.SessionID),
+			buyIn:     int32(s.Buyin.Int64),
+			walkout:   int32(s.Walkout.Int64),
+		}
+	}
+	return sr, nil
+}
+
 //     PLAYER_SESSION
 // ======================
 
@@ -99,8 +208,8 @@ func (s *SessionResolver) Time() string {
 type PlayerSessionResolver struct {
 	playerID  graphql.ID
 	sessionID graphql.ID
-	buyIn     int
-	walkout   int
+	buyIn     int32
+	walkout   int32
 }
 
 // PlayerID getter
@@ -114,11 +223,11 @@ func (ps *PlayerSessionResolver) SessionID() graphql.ID {
 }
 
 // BuyIn getter
-func (ps *PlayerSessionResolver) BuyIn() int {
+func (ps *PlayerSessionResolver) BuyIn() int32 {
 	return ps.buyIn
 }
 
 // WalkOut getter
-func (ps *PlayerSessionResolver) WalkOut() int {
+func (ps *PlayerSessionResolver) WalkOut() int32 {
 	return ps.walkout
 }

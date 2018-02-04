@@ -271,3 +271,19 @@ func (p *postgresDb) GetRealmByField(field string, val interface{}) (*Realm, err
 
 	return &realm, nil
 }
+
+func (p *postgresDb) GetPlayerSessionsByField(field string, val interface{}) ([]PlayerSession, error) {
+	q := fmt.Sprintf(`
+		SELECT *
+		FROM player_session
+		WHERE %s=$1
+	`, field)
+
+	var pSessions []PlayerSession
+	if err := p.db.Select(&pSessions, q, val); err != nil {
+		log.WithError(err).Errorf("Failed to fetch player_sessions by %s", field)
+		return nil, err
+	}
+
+	return pSessions, nil
+}
