@@ -1,2 +1,2 @@
-dsn: "host=127.0.0.1 port=5432 user=postgres password=redsux dbname=pokerapi sslmode=disable"
+dsn: "host=127.0.0.1 port=5432 user=postgres password=redsux dbname=postgres sslmode=disable"
 listen-address: :8080
