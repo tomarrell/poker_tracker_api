@@ -28,6 +28,8 @@ schema {
 		name: String!
 		realmId: ID!
 		playerSessions: [PlayerSession]!
+		historicalBalance: Int!
+		realBalance: Int!
 	}
 
 	type Realm {

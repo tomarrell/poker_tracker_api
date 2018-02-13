@@ -101,10 +101,12 @@ func (r *RealmResolver) Sessions() ([]*SessionResolver, error) {
 
 // PlayerResolver struct
 type PlayerResolver struct {
-	id      graphql.ID
-	realmID graphql.ID
-	name    string
-	db      *postgresDb
+	id                graphql.ID
+	realmID           graphql.ID
+	name              string
+	db                *postgresDb
+	realBalance       int32
+	historicalBalance int32
 }
 
 // ID getter
@@ -120,6 +122,32 @@ func (p *PlayerResolver) Name() string {
 // RealmID getter
 func (p *PlayerResolver) RealmID() graphql.ID {
 	return p.realmID
+}
+
+func (p *PlayerResolver) RealBalance() (int32, error) {
+	id, err := strconv.Atoi(string(p.ID()))
+	if err != nil {
+		return 0, errors.New("player id must be numerical")
+	}
+
+	balance, err := p.db.GetRealBalanceByPlayerID(id)
+	if err != nil {
+		return 0, err
+	}
+	return balance, nil
+}
+
+func (p *PlayerResolver) HistoricalBalance() (int32, error) {
+	id, err := strconv.Atoi(string(p.ID()))
+	if err != nil {
+		return 0, errors.New("player id must be numerical")
+	}
+
+	balance, err := p.db.GetHistoricalBalanceByPlayerID(id)
+	if err != nil {
+		return 0, err
+	}
+	return balance, nil
 }
 
 // PlayerSessions getter

@@ -287,3 +287,33 @@ func (p *postgresDb) GetPlayerSessionsByField(field string, val interface{}) ([]
 
 	return pSessions, nil
 }
+
+func (p *postgresDb) GetHistoricalBalanceByPlayerID(id int) (int32, error) {
+	q := `
+		SELECT COALESCE(SUM(walkout) - SUM(buyin), 0)
+		FROM player_session
+		WHERE player_id=$1
+	`
+
+	var balance int32
+	if err := p.db.Get(&balance, q, id); err != nil {
+		log.WithError(err).Errorf("Failed to get player session stats for player id %v", id)
+		return 0, err
+	}
+	return balance, nil
+}
+
+func (p *postgresDb) GetRealBalanceByPlayerID(id int) (int32, error) {
+	q := `
+		SELECT COALESCE(SUM(amount), 0)
+		FROM transfer
+		WHERE player_id=$1
+	`
+
+	var balance int32
+	if err := p.db.Get(&balance, q, id); err != nil {
+		log.WithError(err).Errorf("Failed to get transfer stats for player id %v", id)
+		return 0, err
+	}
+	return balance, nil
+}

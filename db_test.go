@@ -26,6 +26,78 @@ type dbTestSuite struct {
 	dbName string
 }
 
+func (s *dbTestSuite) Test_GetRealBalance() {
+	r, _ := s.p.CreateRealm("testName", &[]string{"testTitle"}[0])
+	s.Require().NotZero(r.ID)
+	realmID := int32(r.ID)
+	sessionName := "christmas poker night 2017"
+	p1, _ := s.p.CreatePlayer("p1", realmID)
+	playerSessions := []PlayerSession{
+		PlayerSession{
+			PlayerID: p1.ID,
+			Buyin:    null.IntFrom(500),
+			Walkout:  null.IntFrom(1250),
+		},
+	}
+	playerSessions2 := []PlayerSession{
+		PlayerSession{
+			PlayerID: p1.ID,
+			Buyin:    null.IntFrom(1000),
+			Walkout:  null.IntFrom(500),
+		},
+	}
+	now := time.Now()
+	_, err := s.p.CreateOrUpdateSession(nil, realmID, sessionName, &now, playerSessions)
+	s.Require().NoError(err)
+	_, err = s.p.CreateOrUpdateSession(nil, realmID, sessionName, &now, playerSessions2)
+	s.Require().NoError(err)
+	_, err = s.p.db.Exec(fmt.Sprintf("INSERT INTO transfer(player_id, amount) VALUES(%v, %v)", p1.ID, -135))
+	s.Require().NoError(err)
+
+	bal, err := s.p.GetRealBalanceByPlayerID(p1.ID)
+	s.Require().NoError(err)
+	s.Require().Equal(int32(1250-500+500-1000-135), bal)
+
+	bal, err = s.p.GetRealBalanceByPlayerID(1234)
+	s.Require().NoError(err)
+	s.Require().Equal(int32(0), bal)
+}
+
+func (s *dbTestSuite) Test_GetHistoricalBalance() {
+	r, _ := s.p.CreateRealm("testName", &[]string{"testTitle"}[0])
+	s.Require().NotZero(r.ID)
+	realmID := int32(r.ID)
+	sessionName := "christmas poker night 2017"
+	p1, _ := s.p.CreatePlayer("p1", realmID)
+	playerSessions := []PlayerSession{
+		PlayerSession{
+			PlayerID: p1.ID,
+			Buyin:    null.IntFrom(500),
+			Walkout:  null.IntFrom(1250),
+		},
+	}
+	playerSessions2 := []PlayerSession{
+		PlayerSession{
+			PlayerID: p1.ID,
+			Buyin:    null.IntFrom(1000),
+			Walkout:  null.IntFrom(500),
+		},
+	}
+	now := time.Now()
+	_, err := s.p.CreateOrUpdateSession(nil, realmID, sessionName, &now, playerSessions)
+	s.Require().NoError(err)
+	_, err = s.p.CreateOrUpdateSession(nil, realmID, sessionName, &now, playerSessions2)
+	s.Require().NoError(err)
+
+	bal, err := s.p.GetHistoricalBalanceByPlayerID(p1.ID)
+	s.Require().NoError(err)
+	s.Require().Equal(int32(1250-500+500-1000), bal)
+
+	bal, err = s.p.GetHistoricalBalanceByPlayerID(1234)
+	s.Require().NoError(err)
+	s.Require().Equal(int32(0), bal)
+}
+
 func (s *dbTestSuite) Test_CreateRealm() {
 	realmName := "red"
 	realmTitle := "sux"
