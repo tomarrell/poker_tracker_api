@@ -47,6 +47,7 @@ schema {
 	}
 
 	type PlayerSession {
+		player: Player!
 		playerId: ID!
 		sessionId: ID!
 		buyin: Int!

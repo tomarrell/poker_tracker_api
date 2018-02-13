@@ -88,7 +88,8 @@ func (r *Resolver) SessionByID(args struct{ ID graphql.ID }) (*SessionResolver, 
 		realmID: toGQL(session.RealmID),
 		name:    session.Name.Ptr(),
 		time:    session.Time.UTC().Format(time.RFC3339),
-		db:      r.db}, nil
+		db:      r.db,
+	}, nil
 }
 
 // SessionsByRealmID resolver
