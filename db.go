@@ -317,3 +317,18 @@ func (p *postgresDb) GetRealBalanceByPlayerID(id int) (int32, error) {
 	}
 	return balance, nil
 }
+
+func (p *postgresDb) GetTotalBuyinByPlayerID(id int) (int32, error) {
+	q := `
+		SELECT COALESCE(SUM(buyin), 0)
+		FROM player_session
+		WHERE player_id=$1
+	`
+
+	var balance int32
+	if err := p.db.Get(&balance, q, id); err != nil {
+		log.WithError(err).Errorf("Failed to get total buyin for player id %v", id)
+		return 0, err
+	}
+	return balance, nil
+}

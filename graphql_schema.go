@@ -30,6 +30,7 @@ schema {
 		playerSessions: [PlayerSession]!
 		historicalBalance: Int!
 		realBalance: Int!
+		totalBuyin: Int!
 	}
 
 	type Realm {

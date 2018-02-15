@@ -107,6 +107,7 @@ type PlayerResolver struct {
 	db                *postgresDb
 	realBalance       int32
 	historicalBalance int32
+	totalBuyin        int32
 }
 
 // ID getter
@@ -148,6 +149,19 @@ func (p *PlayerResolver) HistoricalBalance() (int32, error) {
 		return 0, err
 	}
 	return balance, nil
+}
+
+func (p *PlayerResolver) TotalBuyin() (int32, error) {
+	id, err := strconv.Atoi(string(p.ID()))
+	if err != nil {
+		return 0, errors.New("player id must be numerical")
+	}
+
+	t, err := p.db.GetTotalBuyinByPlayerID(id)
+	if err != nil {
+		return 0, err
+	}
+	return t, nil
 }
 
 // PlayerSessions getter
