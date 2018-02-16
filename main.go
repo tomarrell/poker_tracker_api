@@ -19,7 +19,7 @@ func main() {
 	// heroku defines an ENV var that is the port that should be exposed
 	port := os.Getenv("PORT")
 	// prod dsn is set in heroku via config var
-	dsn := os.Getenv("DATABASE_URL")
+	dsn := os.Getenv("HEROKU_POSTGRESQL_PINK_URL")
 
 	conf := mustParseConfig()
 	if dsn == "" {

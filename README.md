@@ -10,7 +10,7 @@ The user is then able to create a new session, this will present him with a list
 
 ## Prod DB
 
-Currently running in heroku as an add on. See heroku.config.yaml for prod credentials.
+Currently running in heroku as an add on. Ask one of the contributors for prod credentials.
 
 ## Prod Deployment
 

@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"gopkg.in/guregu/null.v3"
@@ -40,7 +41,9 @@ type CreatePlayer struct {
 
 // CreatePlayer mutation
 func (r *Resolver) CreatePlayer(args CreatePlayer) (*PlayerResolver, error) {
-	if args.Name == "" {
+	playerName := strings.ToLower(strings.Trim(args.Name, " "))
+
+	if playerName == "" {
 		return nil, errors.New("Must supply player name")
 	}
 	if args.RealmID == 0 {
@@ -48,7 +51,7 @@ func (r *Resolver) CreatePlayer(args CreatePlayer) (*PlayerResolver, error) {
 	}
 
 	// TODO: Check if realm exists first to provide nicer error?
-	player, err := r.db.CreatePlayer(args.Name, args.RealmID)
+	player, err := r.db.CreatePlayer(playerName, args.RealmID)
 
 	if err != nil {
 		return nil, err
