@@ -54,6 +54,11 @@ type Transfer struct {
 	CreatedAt time.Time   `db:"created_at"`
 }
 
+type balanceSummary struct {
+	PlayerName string `db:"name"`
+	Total      int    `db:"total"`
+}
+
 type postgresDb struct {
 	db *sqlx.DB
 }
@@ -316,6 +321,30 @@ func (p *postgresDb) GetRealBalanceByPlayerID(id int) (int32, error) {
 		return 0, err
 	}
 	return balance, nil
+}
+
+func (p *postgresDb) GetBalanceSummaryByPlayerIDs(ids []int) ([]balanceSummary, error) {
+	q := `
+		SELECT p.name as name, COALESCE(SUM(amount), 0) as total
+		FROM transfer t
+		INNER JOIN player p ON t.player_id = p.id
+		WHERE t.player_id IN (?)
+		GROUP BY name
+		ORDER BY total DESC
+	`
+	query, args, err := sqlx.In(q, ids)
+	if err != nil {
+		log.WithError(err)
+	}
+	query = p.db.Rebind(query)
+
+	var balanceSummaries []balanceSummary
+
+	if err := p.db.Select(&balanceSummaries, query, args...); err != nil {
+		log.WithError(err).Errorf("Failed to get transfer summaries for %v", ids)
+		return nil, err
+	}
+	return balanceSummaries, nil
 }
 
 func (p *postgresDb) GetTotalBuyinByPlayerID(id int) (int32, error) {

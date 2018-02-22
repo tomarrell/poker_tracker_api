@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -13,6 +14,20 @@ import (
 type CreateRealm struct {
 	Name  string
 	Title *string
+}
+
+type byNet []PlayerSession
+
+func (n byNet) Len() int {
+	return len(n)
+}
+
+func (n byNet) Swap(i, j int) {
+	n[i], n[j] = n[j], n[i]
+}
+
+func (n byNet) Less(i, j int) bool {
+	return (n[i].Walkout.Int64 - n[i].Buyin.Int64) > (n[j].Walkout.Int64 - n[j].Buyin.Int64)
 }
 
 // CreateRealm mutation
@@ -115,16 +130,17 @@ func (r *Resolver) PutSession(args CreateSession) (*SessionResolver, error) {
 
 	var (
 		playerSessions = make([]PlayerSession, len(args.PlayerSessions))
-		pids           = make(map[int32]struct{}, len(args.PlayerSessions))
+		pids           = make(map[int32]*Player, len(args.PlayerSessions))
 	)
 	for i, csps := range args.PlayerSessions {
 		if _, ok := pids[csps.PlayerID]; ok {
 			return nil, fmt.Errorf("Duplicate player id %v in playerSessions argument", csps.PlayerID)
 		}
-		if _, err := r.db.GetPlayerByID(int(csps.PlayerID)); err != nil {
+		player, err := r.db.GetPlayerByID(int(csps.PlayerID))
+		if err != nil {
 			return nil, fmt.Errorf("Cannot validate existence of player with id %v", csps.PlayerID)
 		}
-		pids[csps.PlayerID] = struct{}{}
+		pids[csps.PlayerID] = player
 		playerSessions[i] = PlayerSession{
 			PlayerID: int(csps.PlayerID),
 			Buyin:    null.IntFrom(int64(csps.Buyin)),
@@ -142,6 +158,22 @@ func (r *Resolver) PutSession(args CreateSession) (*SessionResolver, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	spids := make([]int, 0, len(pids))
+	pNames := make(map[int]string, len(pids))
+	for id, p := range pids {
+		spids = append(spids, int(id))
+		pNames[int(id)] = p.Name
+	}
+
+	bSummary, err := r.db.GetBalanceSummaryByPlayerIDs(spids)
+	if err != nil {
+		return nil, err
+	}
+	sort.Sort(byNet(playerSessions))
+
+	r.slacker.SendSummary(bSummary, playerSessions, pNames, int(args.RealmID))
+
 	return &SessionResolver{
 		id:      toGQL(session.ID),
 		name:    session.Name.Ptr(),

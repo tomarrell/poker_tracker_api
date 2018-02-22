@@ -2,7 +2,6 @@ package main
 
 import (
 	"net/http"
-	"os"
 
 	log "github.com/Sirupsen/logrus"
 	graphql "github.com/neelance/graphql-go"
@@ -16,33 +15,21 @@ func init() {
 
 func main() {
 
-	// heroku defines an ENV var that is the port that should be exposed
-	port := os.Getenv("PORT")
-	// prod dsn is set in heroku via config var
-	dsn := os.Getenv("HEROKU_POSTGRESQL_PINK_URL")
-
 	conf := mustParseConfig()
-	if dsn == "" {
-		dsn = conf.DSN
-	}
 
-	db := mustInitDB("postgres", dsn)
+	db := mustInitDB("postgres", conf.DSN)
 	defer db.Close()
+	slacker := mustNewSlacker(conf.SlackToken, conf.SlackChannel, conf.TestSlackChannel, conf.MovioRealmID)
 
-	schema := graphql.MustParseSchema(gqlSchema, &Resolver{db})
+	schema := graphql.MustParseSchema(gqlSchema, &Resolver{db, slacker})
 
 	http.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write(page)
 	}))
 	http.Handle("/graphql", cors(&relay.Handler{Schema: schema}))
 
-	listenAddress := ":" + port
-	if port == "" {
-		listenAddress = conf.ListenAddress
-	}
-
-	log.Infof("Starting server on %s", listenAddress)
-	log.Fatal(http.ListenAndServe(listenAddress, nil))
+	log.Infof("Starting server on %s", conf.ListenAddress)
+	log.Fatal(http.ListenAndServe(conf.ListenAddress, nil))
 }
 
 var page = []byte(`

@@ -10,7 +10,8 @@ import (
 
 // Resolver struct
 type Resolver struct {
-	db *postgresDb
+	db      *postgresDb
+	slacker *Slacker
 }
 
 //     REALM
