@@ -26,14 +26,12 @@ git push heroku [your-branch-name-here]:master
 
 ## Prerequisites
 
-- golang version 1.8 or greater
-- https://github.com/golang/dep
+- golang version 1.11 or greater with go module support
 - docker && docker-compose
 
 ## Setup
 
 1. Clone the repository
-2. `dep ensure` to resolve dependencies
 3. Run `docker-compose up` to bring up local postgres db
 4. Install https://github.com/pressly/goose and run Goose migration command described below.
 5. Run `go install && poker_tracker_api --config=config.yaml` inside the root directory to run the service on port `8080`
