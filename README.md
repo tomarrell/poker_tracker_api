@@ -28,14 +28,15 @@ git push heroku [your-branch-name-here]:master
 
 - golang version 1.11 or greater with go module support
 - docker && docker-compose
+- cmake
 
 ## Setup
 
 1. Clone the repository
-3. Run `docker-compose up` to bring up local postgres db
-4. Install https://github.com/pressly/goose and run Goose migration command described below.
-5. Run `go install && poker_tracker_api --config=config.yaml` inside the root directory to run the service on port `8080`
-6. Navigate to `localhost:8080/` to view graphql interface
+2. Run `docker-compose up` to bring up local postgres db
+3. Install https://github.com/pressly/goose and run Goose migration command described below.
+4. run `make run`
+5. Navigate to `localhost:8080/` to view graphql interface
 
 ### Goose migration command
 For local after running docker-compose:
@@ -47,8 +48,7 @@ goose --dir migrations postgres "host=localhost user=postgres dbname=pokerapi pa
 
 Running all tests:
 ```
-docker-compose up -d
-go test -v
+make test
 ```
 
 Run short without integration tests:
