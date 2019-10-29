@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/guregu/null.v3"
 )
 
@@ -65,7 +65,6 @@ type postgresDb struct {
 
 // InitDB initializes the database connection
 func mustInitDB(dbType string, dbInfo string) *postgresDb {
-
 	db := sqlx.MustOpen(dbType, dbInfo)
 	if err := db.Ping(); err != nil {
 		panic(err)

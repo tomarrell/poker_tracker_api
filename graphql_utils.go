@@ -3,7 +3,7 @@ package main
 import (
 	"strconv"
 
-	graphql "github.com/neelance/graphql-go"
+	graphql "github.com/graph-gophers/graphql-go"
 )
 
 func toGQL(i int) graphql.ID {

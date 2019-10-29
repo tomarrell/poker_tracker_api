@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/nlopes/slack"
+	log "github.com/sirupsen/logrus"
 )
 
 type Slacker struct {
@@ -70,8 +70,8 @@ func (s *Slacker) send(msg string, realmId int) {
 	params.Username = "pokerbot"
 	_, _, err := s.client.PostMessage(
 		ch,
-		msg,
-		params,
+		slack.MsgOptionText(msg, false),
+		slack.MsgOptionPostMessageParameters(params),
 	)
 	fmt.Println(s.channel)
 	if err != nil {
